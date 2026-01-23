@@ -1,91 +1,173 @@
-import streamlit as st
+ import streamlit as st
+
 import json
+
 import os
+
 import pandas as pd
+
 from datetime import date
 
+
 # --- KONFIGURACJA ---
-DB_FILE = 'baza_cukierni_v14.json'
+
+DB_FILE = 'baza_cukierni_v10.json'
+
 IMG_FOLDER = 'zdjecia_tortow'
-DEFAULT_IMG = 'default_cake.png' # <--- ZAPISZ ZDJĘCIE JAKO default_cake.png
+
 
 os.makedirs(IMG_FOLDER, exist_ok=True)
 
+
 # --- FUNKCJE ---
+
 def load_data():
+
     if not os.path.exists(DB_FILE):
+
         return {
+
             "skladniki": {
+
                 "Mąka pszenna": {"cena": 3.50, "waga_opakowania": 1000, "kcal": 364},
+
                 "Cukier": {"cena": 4.00, "waga_opakowania": 1000, "kcal": 387},
+
                 "Masło": {"cena": 7.50, "waga_opakowania": 200, "kcal": 717},
+
                 "Jajka (szt)": {"cena": 1.20, "waga_opakowania": 1, "kcal": 155}
+
             },
+
             "przepisy": [],
+
             "kalendarz": [],
+
             "galeria_extra": [] 
+
         }
+
     with open(DB_FILE, 'r', encoding='utf-8') as f:
+
         data = json.load(f)
+
         for k, v in data["skladniki"].items():
+
             if "kcal" not in v: v["kcal"] = 0
+
         if "galeria_extra" not in data: data["galeria_extra"] = []
+
         return data
 
+
 def save_data(data):
+
     with open(DB_FILE, 'w', encoding='utf-8') as f:
+
         json.dump(data, f, ensure_ascii=False, indent=4)
 
+
 def save_uploaded_files(uploaded_files):
+
     saved_paths = []
+
     if uploaded_files:
+
         for uploaded_file in uploaded_files:
+
             file_path = os.path.join(IMG_FOLDER, uploaded_file.name)
+
             with open(file_path, "wb") as f:
+
                 f.write(uploaded_file.getbuffer())
+
             saved_paths.append(file_path)
+
     return saved_paths
 
+
 def formatuj_instrukcje(tekst):
+
     if not tekst: return
+
     linie = tekst.split('\n')
+
     for linia in linie:
+
         l = linia.strip()
+
         if not l: continue
+
         if l[0].isdigit() and (l[1] == '.' or l[1] == ')'):
+
             st.markdown(f"#### {l}") 
+
         elif l.startswith('-') or l.startswith('*'):
+
             st.markdown(f"- {l[1:].strip()}") 
+
         else:
+
             st.write(l)
 
+
 def oblicz_cene_tortu(przepis, data_skladnikow, srednica_docelowa=None):
+
     if not srednica_docelowa:
+
         srednica_docelowa = przepis.get('srednica', 20)
+
+    
+
     baza_cm = przepis.get('srednica', 20)
+
     wsp = (srednica_docelowa / baza_cm) ** 2
+
     
+
     koszt_skladnikow = 0
+
     for sk, il in przepis["skladniki_przepisu"].items():
+
         if sk in data_skladnikow:
+
             info = data_skladnikow[sk]
+
             cena_g = info["cena"] / info["waga_opakowania"]
+
             koszt_skladnikow += (cena_g * il * wsp)
+
     
+
     marza_proc = przepis.get('marza', 10)
+
     czas = przepis.get('czas', 180)
+
     stawka_h = przepis.get('stawka_h', 20)
+
     
+
     koszt_pracy = (czas/60) * stawka_h
+
     cena_koncowa = koszt_skladnikow * (1 + marza_proc/100) + koszt_pracy
+
     return round(cena_koncowa, 2)
 
+
 def render_stars(value):
-    try: val = int(round(float(value)))
-    except: val = 0
+
+    try:
+
+        val = int(round(float(value)))
+
+    except:
+
+        val = 0
+
     return "⭐" * val + "☆" * (5 - val)
 
- # --- WYGLĄD (CSS) ---
+
+# --- WYGLĄD (CSS) ---
 
 st.set_page_config(page_title="WK Torty", page_icon="🧁", layout="wide", initial_sidebar_state="collapsed")
 
@@ -703,4 +785,5 @@ elif menu == "Galeria":
                             del data["galeria_extra"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
 
