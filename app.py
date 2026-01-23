@@ -85,97 +85,203 @@ def render_stars(value):
     except: val = 0
     return "⭐" * val + "☆" * (5 - val)
 
-# --- WYGLĄD (CSS - MOBILE OPTIMIZED) ---
+ # --- WYGLĄD (CSS) ---
+
 st.set_page_config(page_title="WK Torty", page_icon="🧁", layout="wide", initial_sidebar_state="collapsed")
 
+
 st.markdown("""
+
     <style>
+
         #MainMenu, footer, header {visibility: hidden;}
+
         .stApp { background-color: #121212; color: #ffffff; }
-        
-        /* MOBILE FIX: Wymuszenie układu poziomego kolumn */
-        div[data-testid="column"] {
-            width: auto !important;
-            flex: 1 1 auto !important;
-            min-width: 0 !important;
-        }
-        
-        /* Zdjęcia w kafelkach - stała wysokość */
-        .element-container img {
-            height: 150px !important;
-            object-fit: cover;
-            width: 100%;
-            border-radius: 8px;
-        }
 
-        /* Przyciski Menu */
-        .stButton > button { 
-            background-color: transparent; 
-            color: #ff0aef; 
-            border: 2px solid #ff0aef; 
-            border-radius: 10px; 
-            font-weight: bold;
-            padding: 0.2rem 0.1rem;
-            font-size: 0.85rem;
-            width: 100%;
-            white-space: nowrap;
-        }
-        .stButton > button:hover { 
-            background-color: #ff0aef; 
-            color: white;
-            box-shadow: 0 0 10px rgba(255, 10, 239, 0.5);
-        }
+        section[data-testid="stSidebar"] { background-color: #1a1a1a; border-right: 1px solid #333; }
 
-        /* Kafelki */
+        
+
+        /* Styl Kafelków */
+
         div[data-testid="stVerticalBlockBorderWrapper"] {
+
             background-color: #1e1e1e;
+
             border: 1px solid #333;
+
             border-radius: 12px;
+
+            margin-bottom: 15px;
+
             padding: 10px;
-            margin-bottom: 10px;
+
         }
 
-        /* Header */
-        .header-title {
-            font-size: 1.5rem; font-weight: 900; color: #ff0aef;
-            text-align: center; margin-bottom: 5px; margin-top: -20px;
-            text-transform: uppercase; letter-spacing: 2px;
+
+        /* Przyciski */
+
+        .stButton > button { 
+
+            background-color: transparent; 
+
+            color: #ff0aef; 
+
+            border: 2px solid #ff0aef; 
+
+            border-radius: 15px; 
+
+            font-weight: bold;
+
+            width: 100%;
+
+            padding: 0.5rem 1rem;
+
         }
+
+        .stButton > button:hover { 
+
+            background-color: #ff0aef; 
+
+            color: white;
+
+            box-shadow: 0 0 10px rgba(255, 10, 239, 0.5);
+
+        }
+
+        
+
+        /* Inputy */
+
+        .stTextInput > div > div > input, 
+
+        .stTextArea > div > div > textarea, 
+
+        .stNumberInput > div > div > input,
+
+        .stSelectbox > div > div > div { 
+
+            background-color: #2c2c2c !important; 
+
+            color: white !important; 
+
+            border: none !important; 
+
+            border-radius: 8px;
+
+        }
+
+
+        /* Nagłówek */
+
+        .header-box {
+
+            text-align: center; padding: 10px; margin-bottom: 15px;
+
+            border-bottom: 2px solid #ff0aef;
+
+            background: linear-gradient(180deg, rgba(255,10,239,0.1) 0%, rgba(18,18,18,0) 100%);
+
+        }
+
+        .header-title {
+
+            font-size: 1.8rem; font-weight: 900; color: #ff0aef;
+
+            text-transform: uppercase; letter-spacing: 2px;
+
+        }
+
+        
+
+        /* CSS dla Mobile - poprawki */
+
+        @media (max-width: 640px) {
+
+            .header-title { font-size: 1.4rem; }
+
+            /* Zmniejszenie paddingu w kafelkach na mobile */
+
+            div[data-testid="column"] { padding: 5px; }
+
+        }
+
     </style>
+
 """, unsafe_allow_html=True)
 
+
 # --- INICJALIZACJA ---
+
 if 'temp_skladniki' not in st.session_state: st.session_state['temp_skladniki'] = {}
+
 if 'show_add_order' not in st.session_state: st.session_state['show_add_order'] = False
+
 if 'fullscreen_recipe' not in st.session_state: st.session_state['fullscreen_recipe'] = None
+
 if 'edit_order_index' not in st.session_state: st.session_state['edit_order_index'] = None
+
 if 'edit_recipe_index' not in st.session_state: st.session_state['edit_recipe_index'] = None
+
 if 'success_msg' not in st.session_state: st.session_state['success_msg'] = None
-if 'edit_ing_key' not in st.session_state: st.session_state['edit_ing_key'] = None
+
+if 'edit_ing_key' not in st.session_state: st.session_state['edit_ing_key'] = None # Do edycji składnika
+
 
 data = load_data()
 
-# --- HEADER & MENU ---
-st.markdown('<div class="header-title">WK TORTY</div>', unsafe_allow_html=True)
+
+# --- HEADER ---
+
+st.markdown(f"""
+
+    <div class="header-box">
+
+        <div class="header-title">WK TORTY</div>
+
+    </div>
+
+""", unsafe_allow_html=True)
+
+
+# --- MENU ---
+
+# Używamy columns, Streamlit na mobile sam je ułoży w stos lub ściśnie. 
+
+# Aby wyglądało dobrze, używamy prostych etykiet.
 
 menu_cols = st.columns(5)
+
 with menu_cols[0]: 
-    if st.button("📅 Plan"): st.session_state['menu'] = "Kalendarz"
+
+    if st.button("📅 Kalendarz"): st.session_state['menu'] = "Kalendarz"
+
 with menu_cols[1]: 
-    if st.button("📖 Torty"): 
+
+    if st.button("📖 Przepisy"): 
+
         st.session_state['menu'] = "Przepisy"
+
         st.session_state['fullscreen_recipe'] = None
-        st.session_state['edit_recipe_index'] = None
+
 with menu_cols[2]: 
-    if st.button("➕ Nowy"): st.session_state['menu'] = "Dodaj"
+
+    if st.button("➕ Dodaj"): st.session_state['menu'] = "Dodaj"
+
 with menu_cols[3]: 
-    if st.button("📦 Mag"): st.session_state['menu'] = "Magazyn"
+
+    if st.button("📦 Magazyn"): st.session_state['menu'] = "Magazyn"
+
 with menu_cols[4]: 
-    if st.button("🖼️ Foto"): st.session_state['menu'] = "Galeria"
+
+    if st.button("🖼️ Galeria"): st.session_state['menu'] = "Galeria"
+
 
 if 'menu' not in st.session_state: st.session_state['menu'] = "Kalendarz"
+
 menu = st.session_state['menu']
-st.write("---")
+
+st.write("---") 
 
 # ==========================================
 # 1. KALENDARZ
@@ -597,3 +703,4 @@ elif menu == "Galeria":
                             del data["galeria_extra"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
