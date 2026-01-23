@@ -1,369 +1,181 @@
- import streamlit as st
-
+import streamlit as st
 import json
-
 import os
-
 import pandas as pd
-
 from datetime import date
 
-
 # --- KONFIGURACJA ---
-
-DB_FILE = 'baza_cukierni_v10.json'
-
+DB_FILE = 'baza_cukierni_v14.json'
 IMG_FOLDER = 'zdjecia_tortow'
-
+DEFAULT_IMG = 'default_cake.png'  # <--- Upewnij się, że masz ten plik
 
 os.makedirs(IMG_FOLDER, exist_ok=True)
 
-
 # --- FUNKCJE ---
-
 def load_data():
-
     if not os.path.exists(DB_FILE):
-
         return {
-
             "skladniki": {
-
                 "Mąka pszenna": {"cena": 3.50, "waga_opakowania": 1000, "kcal": 364},
-
                 "Cukier": {"cena": 4.00, "waga_opakowania": 1000, "kcal": 387},
-
                 "Masło": {"cena": 7.50, "waga_opakowania": 200, "kcal": 717},
-
                 "Jajka (szt)": {"cena": 1.20, "waga_opakowania": 1, "kcal": 155}
-
             },
-
             "przepisy": [],
-
             "kalendarz": [],
-
             "galeria_extra": [] 
-
         }
-
     with open(DB_FILE, 'r', encoding='utf-8') as f:
-
         data = json.load(f)
-
         for k, v in data["skladniki"].items():
-
             if "kcal" not in v: v["kcal"] = 0
-
         if "galeria_extra" not in data: data["galeria_extra"] = []
-
         return data
 
-
 def save_data(data):
-
     with open(DB_FILE, 'w', encoding='utf-8') as f:
-
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-
 def save_uploaded_files(uploaded_files):
-
     saved_paths = []
-
     if uploaded_files:
-
         for uploaded_file in uploaded_files:
-
             file_path = os.path.join(IMG_FOLDER, uploaded_file.name)
-
             with open(file_path, "wb") as f:
-
                 f.write(uploaded_file.getbuffer())
-
             saved_paths.append(file_path)
-
     return saved_paths
 
-
 def formatuj_instrukcje(tekst):
-
     if not tekst: return
-
     linie = tekst.split('\n')
-
     for linia in linie:
-
         l = linia.strip()
-
         if not l: continue
-
         if l[0].isdigit() and (l[1] == '.' or l[1] == ')'):
-
             st.markdown(f"#### {l}") 
-
         elif l.startswith('-') or l.startswith('*'):
-
             st.markdown(f"- {l[1:].strip()}") 
-
         else:
-
             st.write(l)
 
-
 def oblicz_cene_tortu(przepis, data_skladnikow, srednica_docelowa=None):
-
     if not srednica_docelowa:
-
         srednica_docelowa = przepis.get('srednica', 20)
-
-    
-
     baza_cm = przepis.get('srednica', 20)
-
     wsp = (srednica_docelowa / baza_cm) ** 2
-
     
-
     koszt_skladnikow = 0
-
     for sk, il in przepis["skladniki_przepisu"].items():
-
         if sk in data_skladnikow:
-
             info = data_skladnikow[sk]
-
             cena_g = info["cena"] / info["waga_opakowania"]
-
             koszt_skladnikow += (cena_g * il * wsp)
-
     
-
     marza_proc = przepis.get('marza', 10)
-
     czas = przepis.get('czas', 180)
-
     stawka_h = przepis.get('stawka_h', 20)
-
     
-
     koszt_pracy = (czas/60) * stawka_h
-
     cena_koncowa = koszt_skladnikow * (1 + marza_proc/100) + koszt_pracy
-
     return round(cena_koncowa, 2)
 
-
 def render_stars(value):
-
-    try:
-
-        val = int(round(float(value)))
-
-    except:
-
-        val = 0
-
+    try: val = int(round(float(value)))
+    except: val = 0
     return "⭐" * val + "☆" * (5 - val)
 
-
-# --- WYGLĄD (CSS) ---
-
+# --- WYGLĄD (CSS - MOBILE OPTIMIZED) ---
 st.set_page_config(page_title="WK Torty", page_icon="🧁", layout="wide", initial_sidebar_state="collapsed")
 
-
 st.markdown("""
-
     <style>
-
         #MainMenu, footer, header {visibility: hidden;}
-
         .stApp { background-color: #121212; color: #ffffff; }
-
-        section[data-testid="stSidebar"] { background-color: #1a1a1a; border-right: 1px solid #333; }
-
         
-
-        /* Styl Kafelków */
-
-        div[data-testid="stVerticalBlockBorderWrapper"] {
-
-            background-color: #1e1e1e;
-
-            border: 1px solid #333;
-
-            border-radius: 12px;
-
-            margin-bottom: 15px;
-
-            padding: 10px;
-
+        /* MOBILE FIX: Wymuszenie układu poziomego kolumn */
+        div[data-testid="column"] {
+            width: auto !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
         }
-
-
-        /* Przyciski */
-
-        .stButton > button { 
-
-            background-color: transparent; 
-
-            color: #ff0aef; 
-
-            border: 2px solid #ff0aef; 
-
-            border-radius: 15px; 
-
-            font-weight: bold;
-
+        
+        /* Zdjęcia w kafelkach - stała wysokość */
+        .element-container img {
+            height: 150px !important;
+            object-fit: cover;
             width: 100%;
-
-            padding: 0.5rem 1rem;
-
-        }
-
-        .stButton > button:hover { 
-
-            background-color: #ff0aef; 
-
-            color: white;
-
-            box-shadow: 0 0 10px rgba(255, 10, 239, 0.5);
-
-        }
-
-        
-
-        /* Inputy */
-
-        .stTextInput > div > div > input, 
-
-        .stTextArea > div > div > textarea, 
-
-        .stNumberInput > div > div > input,
-
-        .stSelectbox > div > div > div { 
-
-            background-color: #2c2c2c !important; 
-
-            color: white !important; 
-
-            border: none !important; 
-
             border-radius: 8px;
-
         }
 
-
-        /* Nagłówek */
-
-        .header-box {
-
-            text-align: center; padding: 10px; margin-bottom: 15px;
-
-            border-bottom: 2px solid #ff0aef;
-
-            background: linear-gradient(180deg, rgba(255,10,239,0.1) 0%, rgba(18,18,18,0) 100%);
-
+        /* Przyciski Menu */
+        .stButton > button { 
+            background-color: transparent; 
+            color: #ff0aef; 
+            border: 2px solid #ff0aef; 
+            border-radius: 10px; 
+            font-weight: bold;
+            padding: 0.2rem 0.1rem;
+            font-size: 0.85rem;
+            width: 100%;
+            white-space: nowrap;
+        }
+        .stButton > button:hover { 
+            background-color: #ff0aef; 
+            color: white;
+            box-shadow: 0 0 10px rgba(255, 10, 239, 0.5);
         }
 
+        /* Kafelki */
+        div[data-testid="stVerticalBlockBorderWrapper"] {
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* Header */
         .header-title {
-
-            font-size: 1.8rem; font-weight: 900; color: #ff0aef;
-
+            font-size: 1.5rem; font-weight: 900; color: #ff0aef;
+            text-align: center; margin-bottom: 5px; margin-top: -20px;
             text-transform: uppercase; letter-spacing: 2px;
-
         }
-
-        
-
-        /* CSS dla Mobile - poprawki */
-
-        @media (max-width: 640px) {
-
-            .header-title { font-size: 1.4rem; }
-
-            /* Zmniejszenie paddingu w kafelkach na mobile */
-
-            div[data-testid="column"] { padding: 5px; }
-
-        }
-
     </style>
-
 """, unsafe_allow_html=True)
 
-
 # --- INICJALIZACJA ---
-
 if 'temp_skladniki' not in st.session_state: st.session_state['temp_skladniki'] = {}
-
 if 'show_add_order' not in st.session_state: st.session_state['show_add_order'] = False
-
 if 'fullscreen_recipe' not in st.session_state: st.session_state['fullscreen_recipe'] = None
-
 if 'edit_order_index' not in st.session_state: st.session_state['edit_order_index'] = None
-
 if 'edit_recipe_index' not in st.session_state: st.session_state['edit_recipe_index'] = None
-
 if 'success_msg' not in st.session_state: st.session_state['success_msg'] = None
-
-if 'edit_ing_key' not in st.session_state: st.session_state['edit_ing_key'] = None # Do edycji składnika
-
+if 'edit_ing_key' not in st.session_state: st.session_state['edit_ing_key'] = None
 
 data = load_data()
 
-
-# --- HEADER ---
-
-st.markdown(f"""
-
-    <div class="header-box">
-
-        <div class="header-title">WK TORTY</div>
-
-    </div>
-
-""", unsafe_allow_html=True)
-
-
-# --- MENU ---
-
-# Używamy columns, Streamlit na mobile sam je ułoży w stos lub ściśnie. 
-
-# Aby wyglądało dobrze, używamy prostych etykiet.
+# --- HEADER & MENU ---
+st.markdown('<div class="header-title">WK TORTY</div>', unsafe_allow_html=True)
 
 menu_cols = st.columns(5)
-
 with menu_cols[0]: 
-
-    if st.button("📅 Kalendarz"): st.session_state['menu'] = "Kalendarz"
-
+    if st.button("📅 Plan"): st.session_state['menu'] = "Kalendarz"
 with menu_cols[1]: 
-
-    if st.button("📖 Przepisy"): 
-
+    if st.button("📖 Torty"): 
         st.session_state['menu'] = "Przepisy"
-
         st.session_state['fullscreen_recipe'] = None
-
+        st.session_state['edit_recipe_index'] = None
 with menu_cols[2]: 
-
-    if st.button("➕ Dodaj"): st.session_state['menu'] = "Dodaj"
-
+    if st.button("➕ Nowy"): st.session_state['menu'] = "Dodaj"
 with menu_cols[3]: 
-
-    if st.button("📦 Magazyn"): st.session_state['menu'] = "Magazyn"
-
+    if st.button("📦 Mag"): st.session_state['menu'] = "Magazyn"
 with menu_cols[4]: 
-
-    if st.button("🖼️ Galeria"): st.session_state['menu'] = "Galeria"
-
+    if st.button("🖼️ Foto"): st.session_state['menu'] = "Galeria"
 
 if 'menu' not in st.session_state: st.session_state['menu'] = "Kalendarz"
-
 menu = st.session_state['menu']
-
-st.write("---") 
+st.write("---")
 
 # ==========================================
 # 1. KALENDARZ
@@ -785,5 +597,3 @@ elif menu == "Galeria":
                             del data["galeria_extra"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
-
-
