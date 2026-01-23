@@ -3,10 +3,9 @@ import json
 import os
 import pandas as pd
 from datetime import date
-import time
 
 # --- KONFIGURACJA ---
-DB_FILE = 'baza_cukierni_v7.json'
+DB_FILE = 'baza_cukierni_v8.json'
 IMG_FOLDER = 'zdjecia_tortow'
 LOGO_FILE = "logo_wk_torty.png" 
 
@@ -79,7 +78,7 @@ def oblicz_cene_tortu(przepis, data_db, srednica_docelowa=None):
     cena_koncowa = koszt_skladnikow * (1 + marza_proc/100) + koszt_pracy
     return cena_koncowa
 
-# --- CSS (STYL, KTÓRY CHCIAŁEŚ) ---
+# --- CSS (NAPRAWIONE PRZYCISKI) ---
 st.set_page_config(page_title="WK Torty", page_icon="🧁", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
@@ -91,39 +90,38 @@ st.markdown("""
         /* KAFELKI */
         div[data-testid="column"] {
             background-color: #1e1e1e;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 10px;
             border: 1px solid #333;
-            transition: transform 0.2s;
         }
-        div[data-testid="column"]:hover { border-color: #ff0aef; }
 
-        /* PRZYCISKI - WERSJA PRZEZROCZYSTA (Outline) */
+        /* 1. PRZYCISKI GŁÓWNE - SOLIDNE (Pełny kolor) */
         .stButton > button { 
-            background-color: transparent; 
-            color: #ff0aef; 
-            border: 2px solid #ff0aef; 
-            border-radius: 25px; 
+            background-color: #ff0aef; 
+            color: white; 
+            border: none;
+            border-radius: 8px;
             font-weight: bold;
             width: 100%;
+            padding: 0.5rem 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
         .stButton > button:hover { 
-            background-color: #ff0aef; 
-            color: white;
-            box-shadow: 0 0 15px rgba(255, 10, 239, 0.5);
+            background-color: #c900bc; 
+            box-shadow: 0 4px 10px rgba(255, 10, 239, 0.4);
         }
 
-        /* OKRĄGŁY PRZYCISK X (USUWANIE) */
+        /* 2. PRZYCISK USUWANIA (X) - IDEALNE KOŁO */
         button[kind="secondary"] {
+            background-color: transparent !important;
+            border: 1px solid red !important;
+            color: red !important;
             border-radius: 50% !important;
             width: 36px !important;
             height: 36px !important;
-            aspect-ratio: 1 / 1 !important; /* Wymuszenie idealnego koła */
+            min-width: 36px !important; /* Wymuszenie szerokości */
+            aspect-ratio: 1 / 1 !important; /* Wymuszenie proporcji koła */
             padding: 0 !important;
-            line-height: 1 !important;
-            border: 1px solid red !important;
-            color: red !important;
-            background-color: transparent !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
@@ -146,23 +144,21 @@ st.markdown("""
 
         /* NAGŁÓWEK */
         .header-box {
-            text-align: center; padding: 15px; margin-bottom: 20px;
+            text-align: center; padding: 10px; margin-bottom: 20px;
             border-bottom: 2px solid #ff0aef;
-            background: linear-gradient(180deg, rgba(255,10,239,0.1) 0%, rgba(18,18,18,0) 100%);
         }
         .header-title {
-            font-size: 2rem; font-weight: 900; color: #ff0aef;
+            font-size: 1.8rem; font-weight: 900; color: #ff0aef;
             text-transform: uppercase; letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(255,10,239,0.6);
         }
         
-        /* ZDJĘCIA W KAFELKACH */
+        /* ZDJĘCIA */
         .recipe-img {
-            width: 100%; height: 120px; object-fit: cover; border-radius: 10px; margin-bottom: 10px;
+            width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;
         }
         
         .big-price {
-            font-size: 1.4rem; font-weight: bold; color: #00ff00; text-align: center; margin: 5px 0;
+            font-size: 1.3rem; font-weight: bold; color: #00ff00; text-align: center; margin: 5px 0;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -180,7 +176,6 @@ data = load_data()
 st.markdown(f"""
     <div class="header-box">
         <div class="header-title">WK TORTY</div>
-        <div style="color: #ccc; letter-spacing: 1px;">SYSTEM CUKIERNICZY 3.0</div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -191,7 +186,7 @@ if st.session_state['success_msg']:
 # --- MENU ---
 col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
 with col_m1: 
-    if st.button("📅 Kalendarz"): st.session_state['menu'] = "Kalendarz"
+    if st.button("📅 Planer"): st.session_state['menu'] = "Kalendarz"
 with col_m2: 
     if st.button("📖 Przepisy"): 
         st.session_state['menu'] = "Przepisy"
@@ -214,77 +209,130 @@ st.write("---")
 if menu == "Kalendarz":
     st.subheader("📅 Planer Zamówień")
     
-    if st.button("➕ Dodaj nowe zamówienie", type="primary"):
-        st.session_state['show_add_order'] = not st.session_state['show_add_order']
+    is_editing = st.session_state['edit_order_idx'] is not None
+    
+    def_date = date.today()
+    def_client = ""
+    def_desc = ""
+    def_imgs = []
+    
+    if is_editing:
+        idx = st.session_state['edit_order_idx']
+        order = data["kalendarz"][idx]
+        st.info(f"Edytujesz: {order['klient']}")
+        def_date = pd.to_datetime(order['data']).date()
+        def_client = order['klient']
+        def_desc = order['opis']
+        def_imgs = order.get('zdjecia', [])
+    
+    with st.expander("📝 Formularz Zamówienia", expanded=is_editing):
+        with st.form("kalendarz_form"):
+            c1, c2 = st.columns(2)
+            with c1: 
+                data_zamowienia = st.date_input("Data odbioru", value=def_date)
+                klient = st.text_input("Klient", value=def_client)
+            with c2:
+                lista_nazw = ["-"] + [p["nazwa"] for p in data["przepisy"]]
+                wybrany_tort = st.selectbox("Wybierz Tort (opcja)", lista_nazw)
+                srednica_zam = st.number_input("Średnica (cm)", value=20)
 
-    if st.session_state['show_add_order']:
-        with st.container():
-            st.info("Kreator Zamówienia")
-            with st.form("kalendarz_form"):
-                c1, c2 = st.columns(2)
-                with c1: 
-                    data_zamowienia = st.date_input("Data odbioru", value=date.today())
-                    klient = st.text_input("Klient")
-                with c2:
-                    lista_nazw = ["Własna kompozycja"] + [p["nazwa"] for p in data["przepisy"]]
-                    wybrany_tort = st.selectbox("Wybierz Tort Bazowy", lista_nazw)
-                    srednica_zam = st.number_input("Średnica (cm)", value=20)
+            opis_tortu = st.text_area("Szczegóły", value=def_desc)
+            new_imgs = st.file_uploader("Dodaj zdjęcia", accept_multiple_files=True)
+            
+            if is_editing and def_imgs:
+                st.write("Przypisane zdjęcia:")
+                cols_img = st.columns(6)
+                for i, img_path in enumerate(def_imgs):
+                    if os.path.exists(img_path):
+                        cols_img[i % 6].image(img_path, width=50)
 
-                opis_dodatkowy = st.text_area("Szczegóły (Napis, dekoracja)")
+            btn_txt = "Zapisz Zmiany" if is_editing else "Dodaj Zamówienie"
+            
+            if st.form_submit_button(btn_txt):
+                info_cenowe = ""
+                if wybrany_tort != "-":
+                    przepis = next((p for p in data["przepisy"] if p["nazwa"] == wybrany_tort), None)
+                    if przepis:
+                        cena = oblicz_cene_tortu(przepis, data, srednica_zam)
+                        info_cenowe = f"\n[Tort: {wybrany_tort} fi{srednica_zam}cm | Cena: {cena:.2f} zł]"
+
+                full_opis = f"{opis_tortu}{info_cenowe}" if not is_editing else opis_tortu
+                if wybrany_tort != "-" and is_editing: full_opis += info_cenowe
+
+                saved_paths = save_uploaded_files(new_imgs)
+                final_imgs = def_imgs + saved_paths
                 
-                if st.form_submit_button("Zapisz Zlecenie"):
-                    info_cenowe = ""
-                    if wybrany_tort != "Własna kompozycja":
-                        przepis = next((p for p in data["przepisy"] if p["nazwa"] == wybrany_tort), None)
-                        if przepis:
-                            cena = oblicz_cene_tortu(przepis, data, srednica_zam)
-                            info_cenowe = f"\n[AUTO-WYCENA: {wybrany_tort} fi{srednica_zam}cm ~ {cena:.2f} zł]"
+                wpis = {
+                    "data": str(data_zamowienia), 
+                    "klient": klient, 
+                    "opis": full_opis, 
+                    "wykonane": False,
+                    "zdjecia": final_imgs
+                }
+                
+                if is_editing:
+                    data["kalendarz"][idx] = wpis
+                    data["kalendarz"][idx]["wykonane"] = data["kalendarz"][idx].get("wykonane", False)
+                    st.session_state['edit_order_idx'] = None
+                    st.session_state['success_msg'] = "Zaktualizowano!"
+                else:
+                    data["kalendarz"].append(wpis)
+                    st.session_state['success_msg'] = "Dodano!"
+                
+                data["kalendarz"] = sorted(data["kalendarz"], key=lambda x: x['data'])
+                save_data(data)
+                st.rerun()
+                
+        if is_editing:
+            if st.button("Anuluj edycję"):
+                st.session_state['edit_order_idx'] = None
+                st.rerun()
 
-                    full_opis = f"{opis_dodatkowy}{info_cenowe}"
-                    nowy_wpis = {"data": str(data_zamowienia), "klient": klient, "opis": full_opis, "wykonane": False}
-                    data["kalendarz"].append(nowy_wpis)
-                    data["kalendarz"] = sorted(data["kalendarz"], key=lambda x: x['data'])
-                    save_data(data)
-                    st.session_state['show_add_order'] = False
-                    st.rerun()
-
-    st.write("") 
     if not data["kalendarz"]:
         st.info("Brak zleceń.")
     else:
         for i, wpis in enumerate(data["kalendarz"]):
-            # STYLE KARTY
-            bg = "#252525"
-            border = "#ff0aef"
-            icon = "⏳ OCZEKUJE"
-            if wpis.get("wykonane"):
-                bg = "#1a3a1a"
-                border = "#00ff00"
-                icon = "✅ GOTOWE"
-
-            st.markdown(f"""
-            <div style="background-color:{bg}; padding:15px; margin-bottom:10px; border-left:5px solid {border}; border-radius:8px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3 style="margin:0; color:white;">{wpis['klient']}</h3>
-                    <span style="background:#333; padding:5px 10px; border-radius:10px;">{wpis['data']}</span>
-                </div>
-                <p style="color:#bbb; margin-top:10px; white-space: pre-wrap;">{wpis['opis']}</p>
-                <div style="font-weight:bold; color:{border}; margin-top:10px;">{icon}</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            c1, c2, c3 = st.columns([1, 1, 3])
+            bg_col = "#252525"
+            border_col = "#ff0aef"
+            status_icon = "⏳"
             
-            btn_label = "Cofnij" if wpis.get("wykonane") else "Oznacz Gotowe"
-            if c1.button(btn_label, key=f"status_{i}"):
-                data["kalendarz"][i]["wykonane"] = not data["kalendarz"][i]["wykonane"]
-                save_data(data)
-                st.rerun()
+            if wpis.get("wykonane"):
+                bg_col = "#1a3a1a"
+                border_col = "#00ff00"
+                status_icon = "✅"
+
+            with st.container():
+                st.markdown(f"""
+                <div style="background-color:{bg_col}; padding:15px; border-left:5px solid {border_col}; border-radius:8px; margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <h3 style="margin:0; color:white;">{status_icon} {wpis['klient']}</h3>
+                        <span style="background:#444; padding:2px 8px; border-radius:5px;">{wpis['data']}</span>
+                    </div>
+                    <p style="color:#ccc; margin-top:5px; white-space:pre-wrap;">{wpis['opis']}</p>
+                </div>
+                """, unsafe_allow_html=True)
                 
-            if c3.button("Usuń", key=f"del_{i}"):
-                data["kalendarz"].pop(i)
-                save_data(data)
-                st.rerun()
+                imgs = wpis.get("zdjecia", [])
+                if imgs:
+                    with st.expander("📷 Pokaż zdjęcia"):
+                        cols_p = st.columns(4)
+                        for j, path in enumerate(imgs):
+                            if os.path.exists(path):
+                                cols_p[j % 4].image(path)
+
+                c1, c2, c3 = st.columns([1, 1, 3])
+                btn_stat = "Cofnij" if wpis.get("wykonane") else "Gotowe"
+                if c1.button(btn_stat, key=f"s_{i}"):
+                    data["kalendarz"][i]["wykonane"] = not data["kalendarz"][i]["wykonane"]
+                    save_data(data)
+                    st.rerun()
+                if c2.button("Edytuj", key=f"e_{i}"):
+                    st.session_state['edit_order_idx'] = i
+                    st.rerun()
+                if c3.button("Usuń", key=f"d_{i}"):
+                    data["kalendarz"].pop(i)
+                    save_data(data)
+                    st.rerun()
 
 # ==========================================
 # 2. MAGAZYN
@@ -293,25 +341,30 @@ elif menu == "Magazyn":
     st.subheader("📦 Magazyn Składników")
     
     if data["skladniki"]:
-        df = pd.DataFrame.from_dict(data["skladniki"], orient='index')
-        df.reset_index(inplace=True)
-        df.columns = ["Składnik", "Cena (PLN)", "Waga (g/szt)", "Kcal/100g"]
+        tabela = []
+        for nazwa, info in data["skladniki"].items():
+            tabela.append({
+                "Składnik": nazwa,
+                "Waga (g/szt)": info["waga_opakowania"],
+                "Kcal/100g": info["kcal"],
+                "Cena (PLN)": info["cena"]
+            })
+        df = pd.DataFrame(tabela)
         st.dataframe(df, use_container_width=True, hide_index=True)
     
     st.write("---")
     with st.form("magazyn_add"):
-        st.write("Dodaj/Edytuj produkt:")
         c1, c2, c3, c4 = st.columns(4)
         with c1: new_name = st.text_input("Nazwa")
-        with c2: new_price = st.number_input("Cena (PLN)", min_value=0.01, step=0.5)
-        with c3: new_weight = st.number_input("Waga op. (g)", min_value=1, step=1)
-        with c4: new_kcal = st.number_input("Kcal (w 100g)", min_value=0, step=1)
+        with c2: new_weight = st.number_input("Waga op. (g)", min_value=1, step=1)
+        with c3: new_kcal = st.number_input("Kcal (w 100g)", min_value=0, step=1)
+        with c4: new_price = st.number_input("Cena (PLN)", min_value=0.01, step=0.5)
         
         if st.form_submit_button("Zapisz w Magazynie"):
             if new_name:
                 data["skladniki"][new_name] = {"cena": new_price, "waga_opakowania": new_weight, "kcal": new_kcal}
                 save_data(data)
-                st.success(f"Zapisano: {new_name}")
+                st.session_state['success_msg'] = f"Zapisano: {new_name}"
                 st.rerun()
 
 # ==========================================
@@ -350,19 +403,25 @@ elif menu == "Dodaj":
         st.markdown("### 1. Składniki")
         with st.form("skladniki_form"):
             wybran = st.selectbox("Wybierz", list(data["skladniki"].keys()))
-            krok = 1.0 if ("szt" in wybran.lower() or "jaja" in wybran.lower()) else 1.0
+            
+            # Inteligentny krok
+            krok = 1.0
+            if "szt" in wybran.lower() or "jaja" in wybran.lower():
+                krok = 1.0 
+            
             ilo = st.number_input("Ilość (g / szt)", min_value=0.0, step=krok)
             
             if st.form_submit_button("Dodaj"):
-                obecna = st.session_state['temp_skladniki'].get(wybran, 0)
-                st.session_state['temp_skladniki'][wybran] = obecna + ilo
+                obecna_ilosc = st.session_state['temp_skladniki'].get(wybran, 0)
+                st.session_state['temp_skladniki'][wybran] = obecna_ilosc + ilo
                 st.rerun()
         
         if st.session_state['temp_skladniki']:
             st.write("---")
             for k, v in st.session_state['temp_skladniki'].items():
-                cc1, cc2 = st.columns([3,1])
+                cc1, cc2 = st.columns([4,1])
                 cc1.write(f"**{k}**: {v}")
+                # CZERWONY PRZYCISK X (OKOLICZNY)
                 if cc2.button("X", key=f"del_{k}", type="secondary"):
                     del st.session_state['temp_skladniki'][k]
                     st.rerun()
@@ -372,7 +431,7 @@ elif menu == "Dodaj":
         with st.form("glowny_przepis_form"):
             nazwa_przepisu = st.text_input("Nazwa Tortu", value=st.session_state.get('form_nazwa', ''))
             opis = st.text_area("Instrukcja", height=200, value=st.session_state.get('form_opis', ''))
-            uploaded_files = st.file_uploader("Zdjęcia", type=['jpg', 'png', 'jpeg'], accept_multiple_files=True)
+            uploaded_files = st.file_uploader("Dodaj zdjęcia", type=['jpg', 'png', 'jpeg'], accept_multiple_files=True)
             
             c_d1, c_d2 = st.columns(2)
             with c_d1: 
@@ -392,7 +451,7 @@ elif menu == "Dodaj":
             btn_txt = "ZAPISZ ZMIANY" if is_edit_mode else "DODAJ TORT"
             if st.form_submit_button(btn_txt):
                 if not nazwa_przepisu or not st.session_state['temp_skladniki']:
-                    st.error("Uzupełnij nazwę i składniki!")
+                    st.error("Brakuje nazwy lub składników!")
                 else:
                     new_imgs = save_uploaded_files(uploaded_files)
                     final_imgs = new_imgs
@@ -465,7 +524,7 @@ elif menu == "Przepisy":
             if imgs:
                 st.image(imgs[0])
             else:
-                st.markdown('<div style="height:300px; background:#333; display:flex; align-items:center; justify-content:center;">BRAK FOTO</div>', unsafe_allow_html=True)
+                st.info("Brak zdjęcia")
 
         with col_det:
             cena = oblicz_cene_tortu(przepis, data)
@@ -535,10 +594,7 @@ elif menu == "Galeria":
                 })
     
     if not wszystkie_zdjecia:
-        st.info("Brak zdjęć w bazie.")
-        if st.button("Dodaj nowy tort ze zdjęciem"):
-            st.session_state['menu'] = "Dodaj"
-            st.rerun()
+        st.info("Brak zdjęć.")
     else:
         g_cols = st.columns(4)
         for i, item in enumerate(wszystkie_zdjecia):
@@ -557,7 +613,4 @@ elif menu == "Galeria":
                             p = item["obj"]
                             cena = oblicz_cene_tortu(p, data)
                             oc = p.get('oceny', {})
-                            st.toast(f"🎂 {p['nazwa']}\n💰 Cena: {cena:.2f} zł\n⭐ Wygląd: {oc.get('wyglad')}/5")
-    
-    st.write("---")
-    st.caption("Aby dodać więcej zdjęć, edytuj przepis.")
+                            st.toast(f"🎂 {p['nazwa']}\n💰 {cena:.2f} zł\n⭐ Wygląd: {oc.get('wyglad')}")
