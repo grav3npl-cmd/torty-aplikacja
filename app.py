@@ -8,7 +8,6 @@ from PIL import Image
 # --- KONFIGURACJA ---
 DB_FILE = 'baza_cukierni_v5.json'
 IMG_FOLDER = 'zdjecia_tortow'
-# Jeśli nie wgrasz logo na GitHub, aplikacja zadziała bez niego (tekstowo)
 LOGO_FILE = "logo_wk_torty.png" 
 ILUSTRACJA_FILE = "ilustracja_ksiazka.png"
 
@@ -30,7 +29,7 @@ def load_data():
         }
     with open(DB_FILE, 'r', encoding='utf-8') as f:
         data = json.load(f)
-        # Naprawa starych wersji bazy danych (zgodność wsteczna)
+        # Naprawa starych wersji bazy danych
         for p in data["przepisy"]:
             if "zdjecie" in p and isinstance(p["zdjecie"], str) and p["zdjecie"]:
                 p["zdjecia"] = [p["zdjecie"]]
@@ -47,15 +46,11 @@ def save_uploaded_files(uploaded_files):
     saved_paths = []
     if uploaded_files:
         for uploaded_file in uploaded_files:
-            # Zapisujemy plik w folderze tymczasowym kontenera
             file_path = os.path.join(IMG_FOLDER, uploaded_file.name)
             with open(file_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
             saved_paths.append(file_path)
     return saved_paths
-
-# --- WYGLĄD (CSS) ---
-st.set_page_config(page_title="WK Torty", page_icon="🧁", layout="wide")
 
 # --- WYGLĄD (CSS) - WERSJA CLEAN MOBILE ---
 st.set_page_config(page_title="WK Torty", page_icon="🧁", layout="wide", initial_sidebar_state="collapsed")
@@ -63,11 +58,11 @@ st.set_page_config(page_title="WK Torty", page_icon="🧁", layout="wide", initi
 st.markdown("""
     <style>
         /* 1. UKRYWANIE ELEMENTÓW STREAMLIT */
-        #MainMenu {visibility: hidden;} /* Ukrywa menu hamburgera */
-        footer {visibility: hidden;}    /* Ukrywa stopkę "Made with Streamlit" */
-        header {visibility: hidden;}    /* Ukrywa pasek na samej górze */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
         
-        /* 2. MNIEJSZE MARGINESY (Lepsze na telefon) */
+        /* 2. MNIEJSZE MARGINESY */
         .block-container {
             padding-top: 1rem !important;
             padding-bottom: 1rem !important;
@@ -86,12 +81,12 @@ st.markdown("""
             border-radius: 12px; 
             border: none; 
             font-weight: 600;
-            width: 100%; /* Rozciągnij przyciski na telefonie */
+            width: 100%;
             padding: 0.5rem 1rem;
         }
         .stButton > button:hover { background-color: #c900bc; }
         
-        /* 5. INPUTY (Pola tekstowe) */
+        /* 5. INPUTY */
         .stTextInput > div > div > input, 
         .stTextArea > div > div > textarea, 
         .stNumberInput > div > div > input,
@@ -118,7 +113,7 @@ st.markdown("""
             align-items: center; 
             justify-content: center; 
             margin-bottom: 20px;
-            margin-top: -20px; /* Podciągamy do góry */
+            margin-top: -20px;
         }
         .logo-circle { 
             width: 70px; height: 70px; 
@@ -135,19 +130,90 @@ st.markdown("""
             letter-spacing: 1px;
         }
         
-        /* Checkboxy (większe na telefon) */
         .stCheckbox label { font-size: 16px !important; }
-        .stCheckbox span { background-color: #2b2b2b !important; }
-
-        /* Expander (rozwijana lista) */
         .streamlit-expanderHeader {
             background-color: #2c2c2c !important;
             border-radius: 10px !important;
             color: white !important;
         }
+        h1, h2, h3, h4, h5, h6, p, label, .stMarkdown, .stRadio label { color: #ffffff !important; }
+        .stCaption { color: #b0b0b0 !important; }
     </style>
 """, unsafe_allow_html=True)
+
+# --- INICJALIZACJA ---
+if 'temp_skladniki' not in st.session_state:
+    st.session_state['temp_skladniki'] = {}
+if 'show_add_order' not in st.session_state:
+    st.session_state['show_add_order'] = False
+
+data = load_data()
+
+# --- SIDEBAR (MENU) ---
+with st.sidebar:
+    st.title("🧁 WK Torty")
+    st.write("---")
+    menu = st.radio("MENU", ["📅 Kalendarz", "📖 Książka Przepisów", "➕ Dodaj Przepis", "📦 Magazyn"])
+
+# ==========================================
+# 1. KALENDARZ
+# ==========================================
+if menu == "📅 Kalendarz":
+    # Nagłówek
+    if os.path.exists(LOGO_FILE):
+        st.markdown(f"""
+            <div class="header-container">
+                <div class="logo-circle">
+                    <img src="data:image/png;base64,{st.image(LOGO_FILE, output_format='PNG').data}" width="50">
+                </div>
+                <div class="header-title">WK Torty</div>
+            </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(f"""<div class="header-container"><div class="header-title">WK Torty</div></div>""", unsafe_allow_html=True)
+    
+    # Przycisk
+    if st.button("➕ Dodaj zamówienie", key="add_order_btn"):
+        st.session_state['show_add_order'] = not st.session_state['show_add_order']
+
+    if st.session_state['show_add_order']:
+        with st.form("kalendarz_form"):
+            st.subheader("Nowe zamówienie")
+            col_k1, col_k2 = st.columns(2)
+            with col_k1: data_zamowienia = st.date_input("Data odbioru", value=date.today())
+            with col_k2: klient = st.text_input("Klient")
+            opis_tortu = st.text_area("Szczegóły zamówienia")
+            
+            if st.form_submit_button("Zapisz"):
+                nowy_wpis = {"data": str(data_zamowienia), "klient": klient, "opis": opis_tortu, "wykonane": False}
+                data["kalendarz"].append(nowy_wpis)
+                data["kalendarz"] = sorted(data["kalendarz"], key=lambda x: x['data'])
+                save_data(data)
+                st.session_state['show_add_order'] = False
+                st.success("Dodano!")
+                st.rerun()
+        st.write("---")
+
+    st.subheader("Nadchodzące zlecenia")
+    if not data["kalendarz"]:
+        st.markdown("""<div style="text-align: center; margin-top: 50px;">""", unsafe_allow_html=True)
+        if os.path.exists(ILUSTRACJA_FILE):
+             st.image(ILUSTRACJA_FILE, width=200)
+        else:
+             st.info("Brak aktywnych zamówień")
+        st.markdown("""<h3>Kalendarz jest pusty</h3><p>Dodaj nowe zamówienie powyżej.</p></div>""", unsafe_allow_html=True)
+    else:
+        for i, wpis in enumerate(data["kalendarz"]):
+            kolor = "✅" if wpis.get("wykonane") else "⏳"
+            with st.container():
+                st.markdown(f"""
+                <div class="order-card">
+                    <strong>{wpis['data']}</strong> | {kolor} <strong>{wpis['klient']}</strong><br>
+                    <small style="color: #b0b0b0;">{wpis['opis']}</small>
+                </div>
+                """, unsafe_allow_html=True)
                 
+                # To jest miejsce, gdzie był błąd - teraz jest naprawione:
                 c1, c2 = st.columns([1, 4])
                 if not wpis.get("wykonane"):
                     if c1.button("Zrobione", key=f"done_{i}"):
@@ -213,7 +279,7 @@ elif menu == "➕ Dodaj Przepis":
         st.caption("Lista jest pusta.")
 
     st.write("---")
-    st.info("KROK 2: Opis (Każda nowa linia w instrukcji będzie osobnym punktem do odhaczenia!)")
+    st.info("KROK 2: Opis")
     with st.form("glowny_przepis_form"):
         nazwa_przepisu = st.text_input("Nazwa Tortu")
         opis = st.text_area("Instrukcja (Wpisz każdy krok w nowej linii)", height=200)
@@ -316,5 +382,4 @@ elif menu == "📖 Książka Przepisów":
                         st.success(f"Cena dla klienta: {cena_min:.2f} zł")
                     
                     st.write(f"**Przepis:**")
-
                     st.write(przepis['opis'])
