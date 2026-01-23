@@ -3,7 +3,6 @@ import json
 import os
 import pandas as pd
 from datetime import date
-import time
 
 # --- KONFIGURACJA ---
 DB_FILE = 'baza_cukierni_v8.json'
@@ -96,12 +95,12 @@ st.markdown("""
             border: 1px solid #333;
         }
 
-        /* 1. PRZYCISKI GŁÓWNE - SOLIDNE (Powrót do stylu v5/v6) */
+        /* 1. PRZYCISKI GŁÓWNE - SOLIDNE (Pełny kolor) */
         .stButton > button { 
             background-color: #ff0aef; 
             color: white; 
             border: none;
-            border-radius: 8px; /* Standardowe zaokrąglenie */
+            border-radius: 8px;
             font-weight: bold;
             width: 100%;
             padding: 0.5rem 1rem;
@@ -120,7 +119,8 @@ st.markdown("""
             border-radius: 50% !important;
             width: 36px !important;
             height: 36px !important;
-            aspect-ratio: 1 / 1 !important; /* TO WYMUSZA KOŁO */
+            min-width: 36px !important; /* Wymuszenie szerokości */
+            aspect-ratio: 1 / 1 !important; /* Wymuszenie proporcji koła */
             padding: 0 !important;
             display: flex !important;
             align-items: center !important;
@@ -403,7 +403,13 @@ elif menu == "Dodaj":
         st.markdown("### 1. Składniki")
         with st.form("skladniki_form"):
             wybran = st.selectbox("Wybierz", list(data["skladniki"].keys()))
-            ilo = st.number_input("Ilość (g / szt)", min_value=0, step=1)
+            
+            # Inteligentny krok
+            krok = 1.0
+            if "szt" in wybran.lower() or "jaja" in wybran.lower():
+                krok = 1.0 
+            
+            ilo = st.number_input("Ilość (g / szt)", min_value=0.0, step=krok)
             
             if st.form_submit_button("Dodaj"):
                 obecna_ilosc = st.session_state['temp_skladniki'].get(wybran, 0)
@@ -415,7 +421,7 @@ elif menu == "Dodaj":
             for k, v in st.session_state['temp_skladniki'].items():
                 cc1, cc2 = st.columns([4,1])
                 cc1.write(f"**{k}**: {v}")
-                # TU JEST TEN X (KIND=SECONDARY)
+                # CZERWONY PRZYCISK X (OKOLICZNY)
                 if cc2.button("X", key=f"del_{k}", type="secondary"):
                     del st.session_state['temp_skladniki'][k]
                     st.rerun()
