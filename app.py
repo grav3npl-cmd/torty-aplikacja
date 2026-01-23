@@ -57,145 +57,96 @@ def save_uploaded_files(uploaded_files):
 # --- WYGLĄD (CSS) ---
 st.set_page_config(page_title="WK Torty", page_icon="🧁", layout="wide")
 
+# --- WYGLĄD (CSS) - WERSJA CLEAN MOBILE ---
+st.set_page_config(page_title="WK Torty", page_icon="🧁", layout="wide", initial_sidebar_state="collapsed")
+
 st.markdown("""
     <style>
-        /* Tło aplikacji - Ciemne */
-        .stApp { background-color: #1e1e1e; color: #ffffff; }
+        /* 1. UKRYWANIE ELEMENTÓW STREAMLIT */
+        #MainMenu {visibility: hidden;} /* Ukrywa menu hamburgera */
+        footer {visibility: hidden;}    /* Ukrywa stopkę "Made with Streamlit" */
+        header {visibility: hidden;}    /* Ukrywa pasek na samej górze */
         
-        /* Pasek boczny - Trochę jaśniejszy */
+        /* 2. MNIEJSZE MARGINESY (Lepsze na telefon) */
+        .block-container {
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+        
+        /* 3. TŁO I KOLORY */
+        .stApp { background-color: #1e1e1e; color: #ffffff; }
         section[data-testid="stSidebar"] { background-color: #252525; border-right: 1px solid #333; }
         
-        /* --- Twój Kolor: NEONOWY RÓŻ #ff0aef --- */
+        /* 4. PRZYCISKI */
         .stButton > button { 
             background-color: #ff0aef; 
             color: white; 
-            border-radius: 8px; 
+            border-radius: 12px; 
             border: none; 
-            font-weight: bold; 
-            box-shadow: 0px 0px 10px rgba(255, 10, 239, 0.3); 
+            font-weight: 600;
+            width: 100%; /* Rozciągnij przyciski na telefonie */
+            padding: 0.5rem 1rem;
         }
-        .stButton > button:hover { 
-            background-color: #c900bc; 
-            box-shadow: 0px 0px 15px rgba(255, 10, 239, 0.6);
-        }
+        .stButton > button:hover { background-color: #c900bc; }
         
-        /* Duży przycisk w Kalendarzu */
-        .big-button { width: 100%; padding: 15px 0; border-radius: 50px !important; font-size: 1.2em !important; margin-bottom: 30px; }
-        
-        /* Kolory tekstu i nagłówków */
-        h1, h2, h3, h4, h5, h6, p, label, .stMarkdown, .stRadio label { color: #ffffff !important; }
-        .stCaption { color: #b0b0b0 !important; }
-        
-        /* Pola do pisania (Inputy) */
+        /* 5. INPUTY (Pola tekstowe) */
         .stTextInput > div > div > input, 
         .stTextArea > div > div > textarea, 
-        .stNumberInput > div > div > input { 
-            background-color: #333333; 
-            color: #ffffff; 
-            border: 1px solid #555555; 
+        .stNumberInput > div > div > input,
+        .stDateInput > div > div > input { 
+            background-color: #2b2b2b !important; 
+            color: white !important; 
+            border: 1px solid #444 !important; 
+            border-radius: 10px;
         }
         
-        /* Kalendarz systemowy */
-        input[type="date"] { 
-            background-color: #333333; 
-            color: #ffffff; 
-            border: 1px solid #555555; 
-            min-height: 40px; 
-            filter: invert(1); /* Triki żeby ikonka kalendarza była widoczna na ciemnym */
-        }
-        
-        /* Karty zamówień */
+        /* 6. KARTY ZAMÓWIEŃ */
         .order-card { 
             background-color: #2c2c2c; 
             padding: 15px; 
             border-radius: 15px; 
-            margin-bottom: 15px; 
-            border-left: 5px solid #ff0aef; 
+            margin-bottom: 10px; 
+            border-left: 6px solid #ff0aef;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         
-        /* Nagłówek z logo */
-        .header-container { display: flex; align-items: center; justify-content: center; margin-bottom: 30px; }
-        .logo-circle { width: 60px; height: 60px; border-radius: 50%; background-color: white; display: flex; align-items: center; justify-content: center; margin-right: 15px; overflow: hidden; }
-        .header-title { font-size: 24px; font-weight: bold; text-shadow: 0px 0px 10px rgba(255, 10, 239, 0.5); color: #ff0aef !important; }
+        /* 7. NAGŁÓWEK Z LOGO */
+        .header-container { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-bottom: 20px;
+            margin-top: -20px; /* Podciągamy do góry */
+        }
+        .logo-circle { 
+            width: 70px; height: 70px; 
+            border-radius: 50%; 
+            background-color: white; 
+            display: flex; align-items: center; justify-content: center; 
+            margin-right: 15px; 
+            border: 2px solid #ff0aef;
+        }
+        .header-title { 
+            font-size: 26px; 
+            font-weight: 800; 
+            color: #ff0aef !important;
+            letter-spacing: 1px;
+        }
         
-        .empty-state { text-align: center; margin-top: 50px; }
-        .stCheckbox label { font-size: 1.1em; padding-top: 4px; }
+        /* Checkboxy (większe na telefon) */
+        .stCheckbox label { font-size: 16px !important; }
+        .stCheckbox span { background-color: #2b2b2b !important; }
+
+        /* Expander (rozwijana lista) */
+        .streamlit-expanderHeader {
+            background-color: #2c2c2c !important;
+            border-radius: 10px !important;
+            color: white !important;
+        }
     </style>
 """, unsafe_allow_html=True)
-
-# --- INICJALIZACJA ---
-if 'temp_skladniki' not in st.session_state:
-    st.session_state['temp_skladniki'] = {}
-if 'show_add_order' not in st.session_state:
-    st.session_state['show_add_order'] = False
-
-data = load_data()
-
-# --- SIDEBAR (MENU) ---
-with st.sidebar:
-    st.title("🧁 WK Torty")
-    st.write("---")
-    menu = st.radio("MENU", ["📅 Kalendarz", "📖 Książka Przepisów", "➕ Dodaj Przepis", "📦 Magazyn"])
-
-# ==========================================
-# 1. KALENDARZ
-# ==========================================
-if menu == "📅 Kalendarz":
-    # Wyświetlenie nagłówka (z logo jeśli jest wgrane)
-    if os.path.exists(LOGO_FILE):
-        st.markdown(f"""
-            <div class="header-container">
-                <div class="logo-circle">
-                    <img src="data:image/png;base64,{st.image(LOGO_FILE, output_format='PNG').data}" width="50">
-                </div>
-                <div class="header-title">WK Torty</div>
-            </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""<div class="header-container"><div class="header-title">WK Torty</div></div>""", unsafe_allow_html=True)
-    
-    # Przycisk dodawania
-    if st.button("➕ Dodaj zamówienie", key="add_order_btn"):
-        st.session_state['show_add_order'] = not st.session_state['show_add_order']
-    st.markdown('<style>div.stButton > button:first-child { @extend .big-button; }</style>', unsafe_allow_html=True)
-
-    if st.session_state['show_add_order']:
-        with st.form("kalendarz_form"):
-            st.subheader("Nowe zamówienie")
-            col_k1, col_k2 = st.columns(2)
-            with col_k1: data_zamowienia = st.date_input("Data odbioru", value=date.today())
-            with col_k2: klient = st.text_input("Klient")
-            opis_tortu = st.text_area("Szczegóły zamówienia")
-            
-            if st.form_submit_button("Zapisz"):
-                nowy_wpis = {"data": str(data_zamowienia), "klient": klient, "opis": opis_tortu, "wykonane": False}
-                data["kalendarz"].append(nowy_wpis)
-                data["kalendarz"] = sorted(data["kalendarz"], key=lambda x: x['data'])
-                save_data(data)
-                st.session_state['show_add_order'] = False
-                st.success("Dodano!")
-                st.rerun()
-        st.write("---")
-
-    st.subheader("Nadchodzące zlecenia")
-    if not data["kalendarz"]:
-        st.markdown("""<div class="empty-state">""", unsafe_allow_html=True)
-        # Placeholder jeśli brak ilustracji
-        if os.path.exists(ILUSTRACJA_FILE):
-             st.image(ILUSTRACJA_FILE, width=200)
-        else:
-             st.info("Brak aktywnych zamówień")
-        st.markdown("""<h3>Kalendarz jest pusty</h3><p>Dodaj nowe zamówienie powyżej.</p></div>""", unsafe_allow_html=True)
-    else:
-        for i, wpis in enumerate(data["kalendarz"]):
-            kolor = "✅" if wpis.get("wykonane") else "⏳"
-            with st.container():
-                st.markdown(f"""
-                <div class="order-card">
-                    <strong>{wpis['data']}</strong> | {kolor} <strong>{wpis['klient']}</strong><br>
-                    <small style="color: #b0b0b0;">{wpis['opis']}</small>
-                </div>
-                """, unsafe_allow_html=True)
                 
                 c1, c2 = st.columns([1, 4])
                 if not wpis.get("wykonane"):
@@ -365,4 +316,5 @@ elif menu == "📖 Książka Przepisów":
                         st.success(f"Cena dla klienta: {cena_min:.2f} zł")
                     
                     st.write(f"**Przepis:**")
+
                     st.write(przepis['opis'])
