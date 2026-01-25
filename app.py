@@ -97,49 +97,48 @@ st.markdown("""
             background-color: #FDF5E6 !important; 
         }
 
-        /* 2. WYMUSZENIE BIAŁEGO TŁA DLA FORMULARZY I POL (Fix dla ciemnych kafelków) */
-        /* Celujemy w kontenery formularzy i wszystkie typy inputów */
-        div[data-testid="stForm"], 
-        div[data-testid="stVerticalBlock"] > div {
-            background-color: transparent !important;
-        }
-
-        /* Białe tło dla: Input, Textarea, Select, Date, Number */
+        /* 2. BRUTALNE WYMUSZENIE BIAŁEGO TŁA DLA KAŻDEGO POLA */
+        /* Ten selektor uderza we wszystko co jest polem edycji w Streamlit */
         div[data-baseweb="input"], 
         div[data-baseweb="textarea"], 
         div[data-baseweb="select"], 
         div[data-testid="stFileUploader"],
-        .stSelectbox div,
-        .stNumberInput div,
-        .stDateInput div,
-        .stTextInput div,
-        .stTextArea div {
+        div[data-testid="stForm"],
+        input, 
+        textarea, 
+        select,
+        section[data-testid="stFileUploaderDropzone"] {
             background-color: #ffffff !important;
-            border: 1px solid #f56cb3 !important; /* Różowa ramka pola */
+            background: #ffffff !important;
+            border: 1px solid #f56cb3 !important;
             border-radius: 8px !important;
+            color: #1A1A1A !important;
         }
 
-        /* 3. TEKST - Musi być ciemny grafit/czarny, żeby był widoczny na białym */
-        input, textarea, select, span, p, label {
+        /* 3. NAPRAWA TEKSTU (Muszą być czarne litery na białym tle) */
+        input, textarea, select, span, p, label, div {
             color: #1A1A1A !important;
             -webkit-text-fill-color: #1A1A1A !important;
         }
 
-        /* Naprawa kontrastu dla Placeholdera (YYYY/MM/DD) */
-        input::placeholder {
-            color: #999999 !important;
-            -webkit-text-fill-color: #999999 !important;
+        /* Specjalna poprawka dla datownika i uploaderów zdjęć */
+        .stDateInput div, .stFileUploader section {
+            background-color: #ffffff !important;
         }
 
         /* 4. SPOLSZCZENIE I STYL UPLOADERA */
-        div[data-testid="stFileUploader"] section {
-            background-color: #ffffff !important;
-            border: 2px dashed #f56cb3 !important;
+        div[data-testid="stFileUploader"] section div::before { 
+            content: "Przeciągnij zdjęcia tutaj"; 
+            color: #1A1A1A !important; 
+            font-weight: bold; 
+            font-size: 16px;
         }
-        div[data-testid="stFileUploader"] section button span::after { content: "Wybierz pliki"; font-size: 14px; }
-        div[data-testid="stFileUploader"] section button span { font-size: 0px; }
-        div[data-testid="stFileUploader"] section div::before { content: "Przeciągnij zdjęcia tutaj"; color: #1A1A1A; font-weight: bold; }
-        div[data-testid="stFileUploader"] section div { font-size: 0px; }
+        div[data-testid="stFileUploader"] section div { font-size: 0px !important; }
+        div[data-testid="stFileUploader"] section button span::after { 
+            content: "Wybierz z dysku"; 
+            font-size: 14px; 
+        }
+        div[data-testid="stFileUploader"] section button span { font-size: 0px !important; }
 
         /* 5. KAFELKI ZLECEŃ */
         .order-card {
@@ -169,11 +168,6 @@ st.markdown("""
         .header-title {
             font-size: 1.6rem; font-weight: 900; color: #ff0aef;
             text-align: center; text-transform: uppercase; letter-spacing: 2px;
-        }
-
-        /* Nagłówki sekcji */
-        h1, h2, h3, h4 {
-            color: #1A1A1A !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -482,6 +476,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
