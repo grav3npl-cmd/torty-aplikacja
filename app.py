@@ -212,6 +212,8 @@ st.write("---")
 #//--- 5.1. KALENDARZ ---//
 if menu == "Kalendarz":
     st.caption("PLANER ZAMÓWIEŃ")
+    
+    # Odświeżenie danych
     data = load_data()
     
     if not st.session_state['show_add_order'] and st.session_state['edit_order_index'] is None:
@@ -222,26 +224,33 @@ if menu == "Kalendarz":
     idx_edit = st.session_state['edit_order_index']
     is_edit_mode = idx_edit is not None
     
+    # FORMULARZ
     if st.session_state['show_add_order'] or is_edit_mode:
         with st.container(border=True):
-            st.subheader("📝 " + ("Edytuj" if is_edit_mode else "Nowe zlecenie"))
+            st.subheader("📝 " + ("Edytuj zlecenie" if is_edit_mode else "Nowe zlecenie"))
             domyslne = data["kalendarz"][idx_edit] if is_edit_mode else {}
+            
             with st.form("kalendarz_form"):
                 d_val = date.fromisoformat(domyslne['data']) if 'data' in domyslne else date.today()
                 data_zamowienia = st.date_input("Termin odbioru", value=d_val)
                 klient = st.text_input("Klient", value=domyslne.get('klient', ''))
+                
                 c1, c2 = st.columns(2)
                 lista_przepisow = ["Własna kompozycja"] + [p["nazwa"] for p in data["przepisy"]]
                 
+                # POPRAWKA: Wyciąganie nazwy tortu z zapisanego opisu do edycji
                 stary_opis_pelny = domyslne.get('opis', '')
                 obecny_tort = "Własna kompozycja"
                 if "[TORT:" in stary_opis_pelny:
                     obecny_tort = stary_opis_pelny.split("[TORT:")[1].split("]")[0].strip()
                 
+                # Ustawienie indeksu dla selectboxa, żeby nie wracał do "Własna kompozycja"
                 idx_start = lista_przepisow.index(obecny_tort) if obecny_tort in lista_przepisow else 0
+                
                 wybrany_tort = c1.selectbox("Wybierz przepis", options=lista_przepisow, index=idx_start)
                 srednica_zam = c2.number_input("Średnica Fi (cm)", value=20)
 
+                # Obliczanie ceny sugerowanej
                 cena_sugerowana = 0.0
                 if wybrany_tort != "Własna kompozycja":
                     przepis_obj = next((p for p in data["przepisy"] if p["nazwa"] == wybrany_tort), None)
@@ -253,15 +262,28 @@ if menu == "Kalendarz":
                     try: stara_cena = float(stary_opis_pelny.split("[CENA:")[1].split("]")[0].replace("zł", "").strip())
                     except: stara_cena = 0.0
 
-                cena_finalna = st.number_input("Cena ostateczna (zł)", value=stara_cena if is_edit_mode else float(cena_sugerowana))
+                cena_finalna = st.number_input("Cena ostateczna (zł)", 
+                                               value=stara_cena if is_edit_mode else float(cena_sugerowana))
+
+                # Wyciąganie czystego opisu (bez tagów ceny i tortu)
                 opis_czysty = stary_opis_pelny.split('[TORT:')[0].strip() if is_edit_mode else ""
                 opis_dodatkowy = st.text_area("Uwagi", value=opis_czysty)
                 uploaded_order_imgs = st.file_uploader("Dodaj zdjęcia", type=['jpg','png'], accept_multiple_files=True)
 
                 b_col1, b_col2 = st.columns(2)
-                if b_col1.form_submit_button("ZAPISZ"):
+                with b_col1: save_btn = st.form_submit_button("ZAPISZ")
+                with b_col2: cancel_btn = st.form_submit_button("ANULUJ")
+
+                if cancel_btn:
+                    st.session_state['show_add_order'] = False
+                    st.session_state['edit_order_index'] = None
+                    st.rerun()
+
+                if save_btn:
                     nowe_fotki = save_uploaded_files(uploaded_order_imgs)
                     stare_fotki = domyslne.get('zdjecia', []) if is_edit_mode else []
+                    
+                    # Zapisujemy RODZAJ TORTU i CENĘ w opisie
                     wpis = {
                         "data": str(data_zamowienia), "klient": klient, 
                         "opis": f"{opis_dodatkowy} [TORT: {wybrany_tort}] [CENA: {cena_finalna:.2f} zł]", 
@@ -270,22 +292,44 @@ if menu == "Kalendarz":
                     }
                     if is_edit_mode: data["kalendarz"][idx_edit] = wpis
                     else: data["kalendarz"].append(wpis)
+                    
                     data["kalendarz"] = sorted(data["kalendarz"], key=lambda x: x['data'])
-                    save_data(data); st.session_state['show_add_order'] = False; st.session_state['edit_order_index'] = None; st.rerun()
-                if b_col2.form_submit_button("ANULUJ"):
-                    st.session_state['show_add_order'] = False; st.session_state['edit_order_index'] = None; st.rerun()
+                    save_data(data)
+                    st.session_state['show_add_order'] = False
+                    st.session_state['edit_order_index'] = None
+                    st.rerun()
 
     st.write("---")
+
+    # LISTA KAFELKÓW
     if not data["kalendarz"]:
-        st.info("Brak zleceń.")
+        st.info("Brak zaplanowanych zleceń.")
     else:
         for i, wpis in enumerate(data["kalendarz"]):
+            # Wyciąganie ceny i rodzaju tortu do wyświetlenia
             opis_pelny = wpis.get('opis', '')
             cena_val = opis_pelny.split("[CENA:")[1].split("]")[0].strip() if "[CENA:" in opis_pelny else "0.00 zł"
             tort_val = opis_pelny.split("[TORT:")[1].split("]")[0].strip() if "[TORT:" in opis_pelny else "Własna kompozycja"
             czysty_opis_wyswietl = opis_pelny.split('[TORT:')[0].strip()
             
-            st.markdown(f'<div class="order-card"><div style="display: flex; justify-content: space-between; align-items: flex-start;"><div><span style="font-size: 1.1rem;">📅 <b>{wpis["data"]}</b></span><br><span style="font-size: 1.3rem;">👤 <b>{wpis["klient"]}</b></span><br><span style="font-size: 1.0rem; color: #ff0aef;">🎂 {tort_val}</span></div><div style="text-align: right;"><span style="color: {"#00ff00" if wpis.get("wykonane") else "#f56cb3"}; font-weight: bold;">{"✅ GOTOWE" if wpis.get("wykonane") else "⏳ W REALIZACJI"}</span><br><span style="color: #00ff00; font-weight: bold; font-size: 1.2rem;">{cena_val}</span></div></div></div>', unsafe_allow_html=True)
+            st.markdown(f"""
+                <div class="order-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span style="font-size: 1.1rem;">📅 <b>{wpis['data']}</b></span><br>
+                            <span style="font-size: 1.3rem;">👤 <b>{wpis['klient']}</b></span><br>
+                            <span style="font-size: 1.0rem; color: #ff0aef;">🎂 {tort_val}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="color: {'#00ff00' if wpis.get('wykonane') else '#f56cb3'}; font-weight: bold;">
+                                {'✅ GOTOWE' if wpis.get('wykonane') else '⏳ W REALIZACJI'}
+                            </span><br>
+                            <span style="color: #00ff00; font-weight: bold; font-size: 1.2rem;">{cena_val}</span>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
             with st.expander("Opcje i szczegóły"):
                 st.write(f"**Uwagi:** {czysty_opis_wyswietl}")
                 if wpis.get('zdjecia'):
@@ -293,8 +337,10 @@ if menu == "Kalendarz":
                     for j, img in enumerate(wpis['zdjecia']):
                         if os.path.exists(img):
                             with c_img[j%4]: st.image(img)
+                
                 c_a, c_b, c_c = st.columns(3, gap="small")
                 btn_txt = "Nadal w realizacji" if wpis.get('wykonane') else "Zakończ zlecenie"
+                
                 if c_a.button(btn_txt, key=f"s_{i}", use_container_width=True):
                     data["kalendarz"][i]["wykonane"] = not data["kalendarz"][i]["wykonane"]
                     save_data(data); st.rerun()
@@ -426,6 +472,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
