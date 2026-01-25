@@ -88,7 +88,74 @@ def render_stars(value):
 #/////////////////////////// 3. Wygląd i Inicjalizacja ///////////////////////////
 st.set_page_config(page_title="WK Torty", page_icon="🧁", layout="wide", initial_sidebar_state="collapsed")
 
-# ... (Tutaj wstaw kod CSS z poprzedniej wiadomości) ...
+st.markdown("""
+    <style>
+        #MainMenu, footer, header {visibility: hidden;}
+        
+        /* TŁO I GŁÓWNY KOLOR TEKSTU */
+        .stApp { 
+            background-color: #FFFDF5; 
+            color: #4A4A4A; 
+        }
+        
+        /* MOBILE FIX: Układ kolumn */
+        div[data-testid="column"] {
+            width: auto !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+        }
+        
+        /* Zdjęcia w kafelkach */
+        .element-container img {
+            height: 150px !important;
+            object-fit: cover;
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        /* Przyciski Menu - Neonowy róż i podświetlanie */
+        .stButton > button { 
+            background-color: #ffffff !important; 
+            color: #ff0aef !important; 
+            border: 2px solid #ff0aef !important; 
+            border-radius: 10px; 
+            font-weight: bold;
+            padding: 0.2rem 0.1rem;
+            font-size: 0.85rem;
+            width: 100%;
+            white-space: nowrap;
+            transition: 0.3s ease;
+        }
+
+        .stButton > button:hover { 
+            background-color: #ff0aef !important; 
+            color: white !important; 
+            box-shadow: 0 0 15px rgba(255, 10, 239, 0.6);
+        }
+
+        /* Kafelki (Karty) */
+        div[data-testid="stVerticalBlockBorderWrapper"] {
+            background-color: #ffffff;
+            border: 1px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Header Tytuł */
+        .header-title {
+            font-size: 1.5rem; font-weight: 900; color: #ff0aef;
+            text-align: center; margin-bottom: 5px; margin-top: -20px;
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+
+        /* Napisy pomocnicze */
+        .stMarkdown, p, span {
+            color: #4A4A4A !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 if 'temp_skladniki' not in st.session_state: st.session_state['temp_skladniki'] = {}
 if 'show_add_order' not in st.session_state: st.session_state['show_add_order'] = False
@@ -490,3 +557,4 @@ elif menu == "Galeria":
                         del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
