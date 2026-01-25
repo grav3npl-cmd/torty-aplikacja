@@ -95,7 +95,7 @@ st.markdown("""
         /* TŁO KREMOWE CAŁOŚCI */
         .stApp { 
             background-color: #FDF5E6; 
-            color: #000000; 
+            color: #1A1A1A; /* Bardzo ciemny grafit zamiast czarnego */
         }
 
         /* GŁÓWNY KONTENER */
@@ -105,8 +105,7 @@ st.markdown("""
             padding: 5% !important;
         }
 
-        /* TOTALNA BLOKADA CIEMNYCH KOLORÓW DLA POLA WPISYWANIA I LIST */
-        /* Celujemy we wszystkie możliwe kontenery Streamlit */
+        /* TOTALNA BLOKADA CIEMNYCH TŁA DLA POLA WPISYWANIA I LIST */
         div[data-baseweb="input"], 
         div[data-baseweb="textarea"], 
         div[data-baseweb="select"], 
@@ -118,13 +117,13 @@ st.markdown("""
         .stTextInput div,
         .stTextArea div {
             background-color: #ffffff !important;
-            color: #000000 !important;
+            color: #1A1A1A !important;
         }
 
-        /* Wymuszenie czarnego tekstu wewnątrz inputów */
+        /* Wymuszenie grafitowego tekstu wewnątrz inputów */
         input, textarea, select, span {
-            color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important;
+            color: #1A1A1A !important;
+            -webkit-text-fill-color: #1A1A1A !important;
         }
 
         /* SPOLSZCZENIE UPLOADERA */
@@ -162,7 +161,8 @@ st.markdown("""
             text-align: center; text-transform: uppercase; letter-spacing: 2px;
         }
         
-        label { color: #000000 !important; font-weight: bold !important; }
+        /* Kolor etykiet pól */
+        label { color: #1A1A1A !important; font-weight: bold !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -472,6 +472,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
