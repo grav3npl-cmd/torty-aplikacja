@@ -97,31 +97,46 @@ st.markdown("""
             background-color: #FDF5E6; 
             color: #4A4A4A; 
         }
+
+        /* SKALOWANIE DLA WSZYSTKICH URZĄDZEŃ (RWD) */
+        html {
+            font-size: 16px; /* Baza dla skalowania */
+        }
         
-        /* MOBILE FIX: Układ kolumn */
-        div[data-testid="column"] {
+        @media (max-width: 600px) {
+            html { font-size: 14px; } /* Mniejsza czcionka na telefonach */
+        }
+
+        /* WYMUSZENIE UKŁADU KOLUMN (Żeby na telefonie nie spadały pod siebie) */
+        [data-testid="column"] {
             width: auto !important;
             flex: 1 1 auto !important;
             min-width: 0 !important;
         }
+
+        /* Kontener na całą zawartość z max-szerokością dla laptopów */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
         
-        /* Zdjęcia w kafelkach */
+        /* Zdjęcia w kafelkach - responsywna wysokość */
         .element-container img {
-            height: 150px !important;
+            height: 180px !important;
             object-fit: cover;
             width: 100%;
             border-radius: 8px;
         }
 
-        /* Przyciski Menu - Neonowy róż i podświetlanie */
+        /* Przyciski Menu - responsywne i neonowe */
         .stButton > button { 
             background-color: #ffffff !important; 
             color: #ff0aef !important; 
             border: 2px solid #ff0aef !important; 
             border-radius: 10px; 
             font-weight: bold;
-            padding: 0.2rem 0.1rem;
-            font-size: 0.85rem;
+            padding: 0.4rem 0.2rem !important;
+            font-size: 0.8rem !important;
             width: 100%;
             white-space: nowrap;
             transition: 0.3s ease;
@@ -138,16 +153,20 @@ st.markdown("""
             background-color: #ffffff;
             border: 1px solid #E0E0E0;
             border-radius: 12px;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 10px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         /* Header Tytuł */
         .header-title {
-            font-size: 1.5rem; font-weight: 900; color: #ff0aef;
-            text-align: center; margin-bottom: 5px; margin-top: 0px;
-            text-transform: uppercase; letter-spacing: 2px;
+            font-size: 1.6rem; 
+            font-weight: 900; 
+            color: #ff0aef;
+            text-align: center; 
+            margin-bottom: 10px;
+            text-transform: uppercase; 
+            letter-spacing: 2px;
         }
 
         /* Napisy pomocnicze */
@@ -168,33 +187,36 @@ if 'edit_ing_key' not in st.session_state: st.session_state['edit_ing_key'] = No
 data = load_data()
 
 #/////////////////////////// 4. Górne Menu ///////////////////////////
-# Centrowanie i wyświetlanie logo
+# Centrowanie i wyświetlanie logo z poprawionym skalowaniem
 LOGO_PATH = "wktorty_logo.png"
 if os.path.exists(LOGO_PATH):
-    c1, c2, c3 = st.columns([1, 0.6, 1])
+    # Używamy kolumn, ale blokujemy ich rozjeżdżanie się
+    c1, c2, c3 = st.columns([1, 0.8, 1])
     with c2:
         st.image(LOGO_PATH, use_container_width=True)
 
 st.markdown('<div class="header-title">WK TORTY</div>', unsafe_allow_html=True)
 
+# Główne przyciski menu - teraz 5 kolumn będzie zawsze obok siebie, nawet na małym ekranie
 menu_cols = st.columns(5)
 with menu_cols[0]: 
-    if st.button("📅 Kalendarz"): st.session_state['menu'] = "Kalendarz"
+    if st.button("📅 Plan"): st.session_state['menu'] = "Kalendarz"
 with menu_cols[1]: 
-    if st.button("📖 Torty"): 
+    if st.button("📖 Przepisy"): 
         st.session_state['menu'] = "Przepisy"
         st.session_state['fullscreen_recipe'] = None
         st.session_state['edit_recipe_index'] = None
 with menu_cols[2]: 
-    if st.button("➕ Dodaj"): st.session_state['menu'] = "Dodaj"
+    if st.button("➕ Nowy"): st.session_state['menu'] = "Dodaj"
 with menu_cols[3]: 
-    if st.button("📦 Magazyn"): st.session_state['menu'] = "Magazyn"
+    if st.button("📦 Stan"): st.session_state['menu'] = "Magazyn"
 with menu_cols[4]: 
-    if st.button("🖼️ Galeria"): st.session_state['menu'] = "Galeria"
+    if st.button("🖼️ Foto"): st.session_state['menu'] = "Galeria"
 
 if 'menu' not in st.session_state: st.session_state['menu'] = "Kalendarz"
 menu = st.session_state['menu']
 st.write("---")
+
 #/////////////////////////// 5. Logika podstron ///////////////////////////
 #//--- 5.1. KALENDARZ ---//
 if menu == "Kalendarz":
@@ -563,5 +585,6 @@ elif menu == "Galeria":
                         del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
 
 
