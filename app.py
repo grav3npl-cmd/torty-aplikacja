@@ -5,9 +5,9 @@ import pandas as pd
 from datetime import date
 
 # --- KONFIGURACJA ---
-DB_FILE = 'baza_cukierni_v14.json'
+DB_FILE = 'baza_cukierni_v13.json'
 IMG_FOLDER = 'zdjecia_tortow'
-DEFAULT_IMG = 'default_cake.png' # <--- ZAPISZ ZDJĘCIE JAKO default_cake.png
+DEFAULT_IMG = 'default_cake.png' # Upewnij się, że ten plik jest w folderze
 
 os.makedirs(IMG_FOLDER, exist_ok=True)
 
@@ -318,8 +318,6 @@ elif menu == "Magazyn":
                             del data["skladniki"][k]
                             save_data(data)
                             st.rerun()
-    else:
-        st.info("Magazyn pusty.")
 
 # ==========================================
 # 3. DODAJ PRZEPIS
@@ -380,11 +378,11 @@ elif menu == "Dodaj":
                 st.rerun()
 
 # ==========================================
-# 4. PRZEPISY
+# 4. PRZEPISY (PRZYWRÓCONA PEŁNA EDYCJA)
 # ==========================================
 elif menu == "Przepisy":
     
-    # --- A. TRYB EDYCJI ---
+    # --- A. TRYB EDYCJI (PRZYWRÓCONY!) ---
     if st.session_state['edit_recipe_index'] is not None:
         idx = st.session_state['edit_recipe_index']
         p_edit = data["przepisy"][idx]
@@ -497,8 +495,7 @@ elif menu == "Przepisy":
                     st.markdown(f"<span style='color:#00ff00; font-weight:bold'>{cena} zł</span>", unsafe_allow_html=True)
                 
                 st.write("")
-                # TRZY KOLUMNY NA BUTTONY (Open, Edit, Delete)
-                b1, b2, b3 = st.columns(3)
+                b1, b2 = st.columns(2)
                 real_idx = data["przepisy"].index(p)
                 
                 if b1.button("👁️", key=f"op_{i}"):
@@ -507,17 +504,14 @@ elif menu == "Przepisy":
                 if b2.button("✏️", key=f"edp_{i}"):
                     st.session_state['edit_recipe_index'] = real_idx
                     st.rerun()
-                if b3.button("🗑️", key=f"del_rec_{i}"):
-                    data["przepisy"].pop(real_idx)
-                    save_data(data)
-                    st.rerun()
 
 # ==========================================
-# 5. GALERIA (BEZ DEFAULTA)
+# 5. GALERIA (PRZYWRÓCONA PEŁNA FUNKCJONALNOŚĆ)
 # ==========================================
 elif menu == "Galeria":
     st.caption("GALERIA ZDJĘĆ")
     
+    # 1. Dodawanie zdjęcia do przepisu
     with st.expander("📷 Dodaj zdjęcie do przepisu", expanded=False):
         c_add1, c_add2 = st.columns(2)
         with c_add1:
@@ -537,13 +531,16 @@ elif menu == "Galeria":
                         st.rerun()
                         break
 
-    # Wyświetlanie (tylko istniejące w bazie)
+    # 2. Wyświetlanie (BEZ defaulta, tylko prawdziwe)
     wszystkie_zdjecia = []
     
+    # Z przepisów
     for idx, p in enumerate(data["przepisy"]):
         if p.get("zdjecia"):
             for img_idx, fotka in enumerate(p["zdjecia"]):
+                # Pomijamy, jeśli zdjęcie nie istnieje
                 if not os.path.exists(fotka): continue
+                
                 ocena = p.get('oceny', {})
                 cena = oblicz_cene_tortu(p, data["skladniki"])
                 wszystkie_zdjecia.append({
@@ -556,6 +553,7 @@ elif menu == "Galeria":
                     "type": "recipe"
                 })
     
+    # Z extra
     for i, fotka in enumerate(data["galeria_extra"]):
         if os.path.exists(fotka):
             wszystkie_zdjecia.append({
@@ -577,8 +575,10 @@ elif menu == "Galeria":
                 with st.container(border=True):
                     st.image(item["src"])
                     
+                    # Przyciski akcji
                     cb1, cb2, cb3 = st.columns([1, 1, 1])
                     
+                    # Idź do
                     if item["type"] == "recipe":
                         if cb1.button("➜", key=f"g_go_{i}"):
                             st.session_state['menu'] = "Przepisy"
@@ -587,9 +587,11 @@ elif menu == "Galeria":
                     else:
                         cb1.button("➜", disabled=True, key=f"d1_{i}")
                     
+                    # Info
                     if cb2.button("ℹ️", key=f"g_inf_{i}"):
                         st.toast(f"{item['name']} | Cena: {item['price']} zł")
                     
+                    # Usuń
                     if cb3.button("🗑️", key=f"g_del_{i}"):
                         if item["type"] == "recipe":
                             del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
