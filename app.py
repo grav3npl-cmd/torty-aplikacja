@@ -98,8 +98,7 @@ st.markdown("""
             color: #4A4A4A; 
         }
 
-        /* GŁÓWNY KONTENER Z MARGINESAMI (Responsywne skalowanie) */
-        /* Na dużych ekranach ogranicza szerokość do 1100px i centruje */
+        /* GŁÓWNY KONTENER Z MARGINESAMI */
         [data-testid="stMainViewContainer"] > section > div {
             max-width: 1100px;
             margin-left: auto;
@@ -108,7 +107,6 @@ st.markdown("""
             padding-right: 5% !important;
         }
 
-        /* Na telefonach (ekran < 600px) marginesy się zmniejszają do minimum */
         @media (max-width: 600px) {
             [data-testid="stMainViewContainer"] > section > div {
                 padding-left: 10px !important;
@@ -117,19 +115,36 @@ st.markdown("""
             html { font-size: 14px; }
         }
 
-        /* WYMUSZENIE UKŁADU KOLUMN W MENU (Pasek boczny) */
+        /* WYMUSZENIE UKŁADU KOLUMN W MENU */
         [data-testid="column"] {
             width: auto !important;
             flex: 1 1 auto !important;
             min-width: 0 !important;
         }
         
-        /* Zdjęcia w kafelkach */
-        .element-container img {
-            height: 180px !important;
-            object-fit: cover;
-            width: 100%;
-            border-radius: 8px;
+        /* POLA WPISYWANIA (Input, Textarea, Number) - BIAŁE TŁO */
+        div[data-baseweb="input"], div[data-baseweb="textarea"], select {
+            background-color: #ffffff !important;
+            border-radius: 8px !important;
+        }
+        
+        input, textarea {
+            background-color: #ffffff !important;
+            color: #4A4A4A !important;
+            border: 1px solid #E0E0E0 !important;
+        }
+
+        /* Styl dla labeli (napisów nad polami) */
+        label {
+            color: #4A4A4A !important;
+            font-weight: bold !important;
+        }
+
+        /* Przycisk Form Submit */
+        div.stFormSubmitButton > button {
+            background-color: #ff0aef !important;
+            color: white !important;
+            width: 100% !important;
         }
 
         /* Przyciski Menu - Neonowy róż */
@@ -588,6 +603,7 @@ elif menu == "Galeria":
                         del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
 
 
 
