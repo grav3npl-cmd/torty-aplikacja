@@ -97,11 +97,14 @@ st.markdown("""
             background-color: #FDF5E6 !important; 
         }
 
-        /* 2. EKSTREMALNE WYMUSZENIE BIAŁEGO TŁA DLA POL FORMULARZA */
-        /* Uderzamy we wszystko co jest wewnątrz selectboxa, number inputa i text inputa */
+        /* 2. TOTALNA BLOKADA CIEMNEGO MOTYWU (Wszystkie pola i listy rozwijane) */
+        /* Uderzamy w pola, formularze i listy opcji (li[role="option"]) */
         div[data-testid="stForm"] *, 
         div[data-baseweb="select"] *, 
-        div[data-baseweb="input"] *,
+        div[data-baseweb="popover"] *, 
+        div[role="listbox"] *,
+        li[role="option"],
+        li[role="option"] *,
         div[data-testid="stNumberInput"] *,
         div[data-testid="stTextInput"] *,
         div[data-testid="stTextArea"] *,
@@ -110,7 +113,18 @@ st.markdown("""
             color: #1A1A1A !important;
         }
 
-        /* Przywrócenie różowej ramki dla głównych kontenerów pól */
+        /* Specyficzna poprawka dla elementu <li> z listy rozwijanej */
+        li[role="option"] {
+            border-bottom: 1px solid #eeeeee !important;
+        }
+        li[role="option"]:hover {
+            background-color: #f56cb3 !important; /* Różowe podświetlenie przy najechaniu */
+        }
+        li[role="option"]:hover * {
+            color: #ffffff !important; /* Biały tekst przy najechaniu na opcję */
+        }
+
+        /* Przywrócenie różowej ramki dla kontenerów */
         div[data-baseweb="input"], 
         div[data-baseweb="select"],
         div[data-testid="stFileUploader"] section {
@@ -122,11 +136,11 @@ st.markdown("""
         /* 3. NAPRAWA TEKSTU I IKON */
         input, textarea, select, span, label, p, svg {
             color: #1A1A1A !important;
-            fill: #1A1A1A !important; /* Dla ikon strzałek w selectboxie */
+            fill: #1A1A1A !important;
             -webkit-text-fill-color: #1A1A1A !important;
         }
 
-        /* 4. SPOLSZCZENIE UPLOADERA (Naprawa komunikatu pod przyciskiem) */
+        /* 4. SPOLSZCZENIE UPLOADERA */
         div[data-testid="stFileUploader"] section div::before { 
             content: "Przeciągnij zdjęcia tutaj"; 
             color: #1A1A1A !important; 
@@ -139,7 +153,7 @@ st.markdown("""
         }
         div[data-testid="stFileUploader"] section button span { font-size: 0px !important; }
 
-        /* 5. PRZYCISKI (Wyróżnienie na tle białych pól) */
+        /* 5. PRZYCISKI */
         .stButton > button, div.stFormSubmitButton > button { 
             background-color: #ffffff !important; 
             color: #ff0aef !important; 
@@ -164,7 +178,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Przeładowanie danych przy starcie
+# Inicjalizacja danych
 data = load_data()
 
 if 'temp_skladniki' not in st.session_state: st.session_state['temp_skladniki'] = {}
@@ -468,6 +482,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
