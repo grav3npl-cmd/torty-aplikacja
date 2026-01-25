@@ -430,35 +430,98 @@ elif menu == "Magazyn":
 
 #//--- 5.3. DODAJ PRZEPIS ---//
 elif menu == "Dodaj":
-    st.caption("NOWY PRZEPIS")
-    with st.container(border=True):
-        st.subheader("1. Wybierz składniki")
-        c1, c2, c3 = st.columns([2,1,1])
-        wyb = c1.selectbox("Produkt", list(data["skladniki"].keys()))
-        il = c2.number_input("Ilość (g/szt)", min_value=0)
-        if c3.button("DODAJ", use_container_width=True):
-            if il > 0:
-                st.session_state['temp_skladniki'][wyb] = st.session_state['temp_skladniki'].get(wyb, 0) + il
-                st.rerun()
-        if st.session_state['temp_skladniki']:
-            st.info(", ".join([f"{k}: {v}" for k,v in st.session_state['temp_skladniki'].items()]))
-            if st.button("WYCZYŚĆ LISTĘ SKŁADNIKÓW"):
-                st.session_state['temp_skladniki'] = {}; st.rerun()
+    st.caption("KREATOR NOWEGO PRZEPISU")
+    
+    # Odświeżenie danych
+    data = load_data()
 
-    with st.form("new_recipe"):
-        st.subheader("2. Szczegóły przepisu")
-        nazwa = st.text_input("Nazwa tortu")
-        opis = st.text_area("Instrukcja przygotowania")
-        imgs = st.file_uploader("Zdjęcia", accept_multiple_files=True)
-        c1, c2, c3, c4 = st.columns(4)
-        fi = c1.number_input("Fi (cm)", 10)
-        marza = c2.number_input("Marża %", 0)
-        czas = c3.number_input("Czas (min)", 30)
-        stawka = c4.number_input("Zarobek/h", 10)
-        if st.form_submit_button("ZAPISZ PRZEPIS", use_container_width=True):
-            if nazwa and st.session_state['temp_skladniki']:
-                data["przepisy"].append({"nazwa": nazwa, "opis": opis, "zdjecia": save_uploaded_files(imgs), "srednica": fi, "skladniki_przepisu": st.session_state['temp_skladniki'], "marza": marza, "czas": czas, "stawka_h": stawka})
-                save_data(data); st.session_state['temp_skladniki'] = {}; st.session_state['menu'] = "Przepisy"; st.rerun()
+    # 1. SEKCJA WYBORU SKŁADNIKÓW
+    with st.container(border=True):
+        st.subheader("1. Składniki przepisu")
+        
+        c1, c2, c3 = st.columns([2, 1, 1])
+        lista_prod = sorted(list(data["skladniki"].keys()))
+        wybrany_prod = c1.selectbox("Wybierz produkt", lista_prod, key="sel_prod_recipe")
+        ilosc_prod = c2.number_input("Ilość (g/szt/ml)", min_value=0, key="num_prod_recipe")
+        
+        if c3.button("DODAJ DO LISTY", use_container_width=True):
+            if ilosc_prod > 0:
+                # Dodajemy lub sumujemy jeśli już jest
+                st.session_state['temp_skladniki'][wybrany_prod] = st.session_state['temp_skladniki'].get(wybrany_prod, 0) + ilosc_prod
+                st.rerun()
+
+        st.write("---")
+        
+        # WYŚWIETLANIE SKŁADNIKÓW JAKO ODDZIELNE KAFELKI
+        if st.session_state['temp_skladniki']:
+            st.write("Składniki w tym przepisie (kliknij 'X' aby usunąć):")
+            
+            # Tworzymy pętlę generującą mały kafelek dla każdego składnika
+            for nazwa_s, ilosc_s in list(st.session_state['temp_skladniki'].items()):
+                # Kontener dla pojedynczego kafelka składnika
+                with st.container(border=False):
+                    # Kolumna lewa na dane, kolumna prawa na mały przycisk usuwania
+                    ck1, ck2 = st.columns([4, 1])
+                    
+                    with ck1:
+                        st.markdown(f"""
+                            <div class="order-card" style="padding: 8px 15px; margin-bottom: 0px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-weight: bold; color: #1A1A1A;">{nazwa_s}</span>
+                                    <span style="color: #f56cb3; font-weight: bold;">{ilosc_s}</span>
+                                </div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with ck2:
+                        # Mały przycisk "X" do usuwania konkretnego kafelka
+                        if st.button("✖", key=f"del_{nazwa_s}", help=f"Usuń {nazwa_s}"):
+                            del st.session_state['temp_skladniki'][nazwa_s]
+                            st.rerun()
+            
+            st.write("")
+            if st.button("WYCZYŚĆ WSZYSTKO", type="secondary"):
+                st.session_state['temp_skladniki'] = {}
+                st.rerun()
+        else:
+            st.info("Dodaj składniki powyżej, aby stworzyć listę.")
+
+    # 2. SEKCJA SZCZEGÓŁÓW PRZEPISU
+    st.write("")
+    with st.form("new_recipe_form"):
+        st.subheader("2. Parametry i instrukcja")
+        
+        nazwa_r = st.text_input("Nazwa przepisu")
+        instrukcja_r = st.text_area("Sposób przygotowania")
+        zdjecia_r = st.file_uploader("Dodaj zdjęcia", accept_multiple_files=True)
+        
+        col1, col2, col3, col4 = st.columns(4)
+        fi_r = col1.number_input("Średnica Fi (cm)", value=20)
+        marza_r = col2.number_input("Marża (%)", value=10)
+        czas_r = col3.number_input("Czas pracy (min)", value=120)
+        zarobek_r = col4.number_input("Zarobek / h (zł)", value=30)
+        
+        if st.form_submit_button("ZAPISZ CAŁY PRZEPIS", use_container_width=True):
+            if not nazwa_r:
+                st.error("Podaj nazwę!")
+            elif not st.session_state['temp_skladniki']:
+                st.error("Lista składników nie może być pusta!")
+            else:
+                nowy_przepis = {
+                    "nazwa": nazwa_r,
+                    "opis": instrukcja_r,
+                    "zdjecia": save_uploaded_files(zdjecia_r),
+                    "srednica": fi_r,
+                    "skladniki_przepisu": st.session_state['temp_skladniki'].copy(),
+                    "marza": marza_r,
+                    "czas": czas_r,
+                    "stawka_h": zarobek_r
+                }
+                data["przepisy"].append(nowy_przepis)
+                save_data(data)
+                st.session_state['temp_skladniki'] = {} # czyścimy po zapisie
+                st.success(f"Przepis {nazwa_r} zapisany pomyślnie!")
+                st.rerun()
 
 #//--- 5.4. PRZEPISY (TORTY) ---//
 elif menu == "Przepisy":
@@ -512,6 +575,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
