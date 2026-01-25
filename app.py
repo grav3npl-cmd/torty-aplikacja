@@ -95,7 +95,7 @@ st.markdown("""
         /* TŁO KREMOWE CAŁOŚCI */
         .stApp { 
             background-color: #FDF5E6; 
-            color: #f56cb3; /* Bardzo ciemny grafit zamiast czarnego */
+            color: #1A1A1A; /* Bardzo ciemny grafit zamiast czarnego */
         }
 
         /* GŁÓWNY KONTENER */
@@ -117,25 +117,25 @@ st.markdown("""
         .stTextInput div,
         .stTextArea div {
             background-color: #ffffff !important;
-            color: #000000 !important;
+            color: #1A1A1A !important;
         }
 
         /* Wymuszenie grafitowego tekstu wewnątrz inputów */
         input, textarea, select, span {
-            color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important;
+            color: #1A1A1A !important;
+            -webkit-text-fill-color: #1A1A1A !important;
         }
 
         /* SPOLSZCZENIE UPLOADERA */
         div[data-testid="stFileUploader"] section button span::after { content: "Wybierz pliki"; font-size: 14px; }
         div[data-testid="stFileUploader"] section button span { font-size: 0px; }
-        div[data-testid="stFileUploader"] section div::before { content: "Przeciągnij zdjęcia tutaj"; color: #000000; font-weight: bold; }
+        div[data-testid="stFileUploader"] section div::before { content: "Przeciągnij zdjęcia tutaj"; color: #f56cb3; font-weight: bold; }
         div[data-testid="stFileUploader"] section div { font-size: 0px; }
 
         /* KAFELKI ZLECEŃ */
         .order-card {
             background-color: #ffffff;
-            border: 2px solid #000000 !important;
+            border: 2px solid #f56cb3 !important;
             border-radius: 15px;
             padding: 15px;
             margin-bottom: 5px;
@@ -162,7 +162,7 @@ st.markdown("""
         }
         
         /* Kolor etykiet pól */
-        label { color: #f56cb3 !important; font-weight: bold !important; }
+        label { color: #1A1A1A !important; font-weight: bold !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -472,6 +472,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
