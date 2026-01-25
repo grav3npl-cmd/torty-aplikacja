@@ -130,7 +130,7 @@ st.markdown("""
         /* SPOLSZCZENIE UPLOADERA */
         div[data-testid="stFileUploader"] section button span::after { content: "Wybierz pliki"; font-size: 14px; }
         div[data-testid="stFileUploader"] section button span { font-size: 0px; }
-        div[data-testid="stFileUploader"] section div::before { content: "Przeciągnij zdjęcia tutaj"; color: #000000; font-weight: bold; }
+        div[data-testid="stFileUploader"] section div::before { content: "Przeciągnij zdjęcia tutaj"; color: #f56cb3; font-weight: bold; }
         div[data-testid="stFileUploader"] section div { font-size: 0px; }
 
         /* KAFELKI ZLECEŃ */
@@ -472,6 +472,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
