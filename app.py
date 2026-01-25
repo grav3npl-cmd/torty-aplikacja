@@ -451,10 +451,10 @@ elif menu == "Dodaj":
         opis = st.text_area("Instrukcja przygotowania")
         imgs = st.file_uploader("Zdjęcia", accept_multiple_files=True)
         c1, c2, c3, c4 = st.columns(4)
-        fi = c1.number_input("Fi (cm)", 15)
-        marza = c2.number_input("Marża %", 10)
-        czas = c3.number_input("Czas (min)", 180)
-        stawka = c4.number_input("Zarobek/h", 20)
+        fi = c1.number_input("Fi (cm)", 10)
+        marza = c2.number_input("Marża %", 0)
+        czas = c3.number_input("Czas (min)", 30)
+        stawka = c4.number_input("Zarobek/h", 10)
         if st.form_submit_button("ZAPISZ PRZEPIS", use_container_width=True):
             if nazwa and st.session_state['temp_skladniki']:
                 data["przepisy"].append({"nazwa": nazwa, "opis": opis, "zdjecia": save_uploaded_files(imgs), "srednica": fi, "skladniki_przepisu": st.session_state['temp_skladniki'], "marza": marza, "czas": czas, "stawka_h": stawka})
@@ -512,6 +512,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
