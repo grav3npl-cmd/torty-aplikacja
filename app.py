@@ -16,10 +16,25 @@ def load_data():
     if not os.path.exists(DB_FILE):
         return {
             "skladniki": {
-                "Mąka pszenna": {"cena": 3.50, "waga_opakowania": 1000, "kcal": 364},
-                "Cukier": {"cena": 4.00, "waga_opakowania": 1000, "kcal": 387},
-                "Masło": {"cena": 7.50, "waga_opakowania": 200, "kcal": 717},
-                "Jajka (szt)": {"cena": 1.20, "waga_opakowania": 1, "kcal": 155}
+                "Jajko [szt]": {"cena": 1.20, "waga_opakowania": 1, "kcal": 155},
+                "Cukier drobny [g]": {"cena": 4.00, "waga_opakowania": 1000, "kcal": 387},
+                "Mąka pszenna [g]": {"cena": 3.50, "waga_opakowania": 1000, "kcal": 364},
+                "Mąka ziemniaczana [g]": {"cena": 5.00, "waga_opakowania": 500, "kcal": 348},
+                "Białej czekolady [g]": {"cena": 6.00, "waga_opakowania": 100, "kcal": 539},
+                "Olej [g]": {"cena": 10.00, "waga_opakowania": 1000, "kcal": 884},
+                "Pasty pistacjowej [g]": {"cena": 45.00, "waga_opakowania": 200, "kcal": 600},
+                "Posiekanych pistacji [g]": {"cena": 15.00, "waga_opakowania": 100, "kcal": 562},
+                "Prażynki francuskiej [g]": {"cena": 12.00, "waga_opakowania": 200, "kcal": 450},
+                "Śmietana 30% [ml]": {"cena": 8.00, "waga_opakowania": 500, "kcal": 292},
+                "Mascarpone [g]": {"cena": 10.00, "waga_opakowania": 250, "kcal": 394},
+                "Mus z malin [g]": {"cena": 15.00, "waga_opakowania": 500, "kcal": 50},
+                "Śmietana 36% [g]": {"cena": 9.00, "waga_opakowania": 500, "kcal": 340},
+                "Żelatyna [g]": {"cena": 4.00, "waga_opakowania": 50, "kcal": 338},
+                "Czekolada mleczna": {"cena": 5.00, "waga_opakowania": 100, "kcal": 535},
+                "Śmietanka kremówka": {"cena": 8.00, "waga_opakowania": 500, "kcal": 292},
+                "Maliny": {"cena": 12.00, "waga_opakowania": 250, "kcal": 52},
+                "Wiśnie": {"cena": 10.00, "waga_opakowania": 500, "kcal": 50},
+                "Kakao": {"cena": 6.00, "waga_opakowania": 200, "kcal": 228}
             },
             "przepisy": [],
             "kalendarz": [],
@@ -492,6 +507,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
