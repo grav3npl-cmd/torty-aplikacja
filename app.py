@@ -288,7 +288,7 @@ if menu == "Kalendarz":
                         przepis = next((p for p in data["przepisy"] if p["nazwa"] == wybrany_tort), None)
                         if przepis:
                             cena_est = oblicz_cene_tortu(przepis, data["skladniki"], srednica_zam)
-                            info_cenowe = f"\n[AUTO-WYCENA: {wybrany_tort} fi{srednica_zam}cm ~ {cena_est} zł]"
+                            info_cenowe = f"\n Cena: ~ {cena_est} zł"
 
                     full_opis = f"{opis_dodatkowy}{info_cenowe}"
                     nowe_fotki = save_uploaded_files(uploaded_order_imgs)
@@ -638,6 +638,7 @@ elif menu == "Galeria":
                         del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
 
 
 
