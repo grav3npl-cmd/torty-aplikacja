@@ -95,7 +95,7 @@ st.markdown("""
         /* TŁO KREMOWE CAŁOŚCI */
         .stApp { 
             background-color: #FDF5E6; 
-            color: #4A4A4A; 
+            color: #000000; /* Zmienione na czysty czarny */
         }
 
         /* GŁÓWNY KONTENER Z MARGINESAMI */
@@ -123,7 +123,6 @@ st.markdown("""
         }
         
         /* KOMPLEKSOWE CZYSZCZENIE KOLORÓW WIDGETÓW (BIAŁE TŁO) */
-        /* Pola tekstowe, listy rozwijane, daty i pola liczbowe */
         div[data-baseweb="input"], 
         div[data-baseweb="textarea"], 
         div[data-baseweb="select"], 
@@ -132,23 +131,23 @@ st.markdown("""
         .stDateInput div {
             background-color: #ffffff !important;
             border-radius: 8px !important;
-            color: #4A4A4A !important;
+            color: #000000 !important; /* Tekst w polach czarny */
         }
 
         /* Wymuszenie koloru tekstu wewnątrz wszystkich pól */
         input, textarea, select, span[data-baseweb="select"] {
             background-color: #ffffff !important;
-            color: #4A4A4A !important;
-            -webkit-text-fill-color: #4A4A4A !important;
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
         }
 
-        /* Styl dla labeli (napisów nad polami) */
+        /* Napisy nad polami (Label) */
         label {
-            color: #4A4A4A !important;
+            color: #000000 !important;
             font-weight: bold !important;
         }
 
-        /* Styl dla ramek expanderów (magazyn, dodaj składnik) */
+        /* Styl dla expanderów */
         .stExpander {
             background-color: #ffffff !important;
             border: 1px solid #E0E0E0 !important;
@@ -204,8 +203,9 @@ st.markdown("""
             letter-spacing: 2px;
         }
 
-        .stMarkdown, p, span {
-            color: #4A4A4A !important;
+        /* Wszystkie inne teksty na stronie */
+        .stMarkdown, p, span, li {
+            color: #000000 !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -619,6 +619,7 @@ elif menu == "Galeria":
                         del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
 
 
 
