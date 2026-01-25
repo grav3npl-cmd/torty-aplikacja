@@ -16,25 +16,49 @@ def load_data():
     if not os.path.exists(DB_FILE):
         return {
             "skladniki": {
+                # BAZA PODSTAWOWA
                 "Jajko [szt]": {"cena": 1.20, "waga_opakowania": 1, "kcal": 155},
                 "Cukier drobny [g]": {"cena": 4.00, "waga_opakowania": 1000, "kcal": 387},
                 "Mąka pszenna [g]": {"cena": 3.50, "waga_opakowania": 1000, "kcal": 364},
                 "Mąka ziemniaczana [g]": {"cena": 5.00, "waga_opakowania": 500, "kcal": 348},
-                "Białej czekolady [g]": {"cena": 6.00, "waga_opakowania": 100, "kcal": 539},
+                "Kakao [g]": {"cena": 7.00, "waga_opakowania": 200, "kcal": 228},
+                "Masło [g]": {"cena": 7.50, "waga_opakowania": 200, "kcal": 717},
                 "Olej [g]": {"cena": 10.00, "waga_opakowania": 1000, "kcal": 884},
-                "Pasty pistacjowej [g]": {"cena": 45.00, "waga_opakowania": 200, "kcal": 600},
-                "Posiekanych pistacji [g]": {"cena": 15.00, "waga_opakowania": 100, "kcal": 562},
-                "Prażynki francuskiej [g]": {"cena": 12.00, "waga_opakowania": 200, "kcal": 450},
-                "Śmietana 30% [ml]": {"cena": 8.00, "waga_opakowania": 500, "kcal": 292},
-                "Mascarpone [g]": {"cena": 10.00, "waga_opakowania": 250, "kcal": 394},
-                "Mus z malin [g]": {"cena": 15.00, "waga_opakowania": 500, "kcal": 50},
-                "Śmietana 36% [g]": {"cena": 9.00, "waga_opakowania": 500, "kcal": 340},
-                "Żelatyna [g]": {"cena": 4.00, "waga_opakowania": 50, "kcal": 338},
-                "Czekolada mleczna": {"cena": 5.00, "waga_opakowania": 100, "kcal": 535},
-                "Śmietanka kremówka": {"cena": 8.00, "waga_opakowania": 500, "kcal": 292},
-                "Maliny": {"cena": 12.00, "waga_opakowania": 250, "kcal": 52},
-                "Wiśnie": {"cena": 10.00, "waga_opakowania": 500, "kcal": 50},
-                "Kakao": {"cena": 6.00, "waga_opakowania": 200, "kcal": 228}
+                "Żelatyna [g]": {"cena": 5.00, "waga_opakowania": 50, "kcal": 338},
+                "Proszek do pieczenia [g]": {"cena": 1.50, "waga_opakowania": 30, "kcal": 100},
+
+                # NABIAŁ I KREMY
+                "Śmietana 30% [ml]": {"cena": 8.50, "waga_opakowania": 500, "kcal": 292},
+                "Śmietana 36% [g]": {"cena": 9.50, "waga_opakowania": 500, "kcal": 340},
+                "Mascarpone [g]": {"cena": 11.00, "waga_opakowania": 250, "kcal": 394},
+                "Twaróg sernikowy [g]": {"cena": 15.00, "waga_opakowania": 1000, "kcal": 120},
+                "Mleko [ml]": {"cena": 4.00, "waga_opakowania": 1000, "kcal": 42},
+
+                # CZEKOLADY I DODATKI SMAKOWE
+                "Czekolada biała [g]": {"cena": 6.00, "waga_opakowania": 100, "kcal": 539},
+                "Czekolada mleczna [g]": {"cena": 5.50, "waga_opakowania": 100, "kcal": 535},
+                "Czekolada gorzka 70% [g]": {"cena": 7.00, "waga_opakowania": 100, "kcal": 599},
+                "Pasta pistacjowa [g]": {"cena": 50.00, "waga_opakowania": 200, "kcal": 600},
+                "Prażynka francuska [g]": {"cena": 14.00, "waga_opakowania": 200, "kcal": 450},
+                "Ekstrakt z wanilii [ml]": {"cena": 25.00, "waga_opakowania": 50, "kcal": 288},
+
+                # OWOCE I KONFITURY
+                "Maliny świeże/mrożone [g]": {"cena": 15.00, "waga_opakowania": 250, "kcal": 52},
+                "Wiśnie mrożone [g]": {"cena": 12.00, "waga_opakowania": 500, "kcal": 50},
+                "Truskawki [g]": {"cena": 10.00, "waga_opakowania": 500, "kcal": 33},
+                "Mus z malin (frużelina) [g]": {"cena": 18.00, "waga_opakowania": 500, "kcal": 80},
+                "Cytryna [szt]": {"cena": 2.00, "waga_opakowania": 1, "kcal": 30},
+
+                # ORZECHY
+                "Pistacje obrane [g]": {"cena": 20.00, "waga_opakowania": 100, "kcal": 562},
+                "Orzechy laskowe [g]": {"cena": 12.00, "waga_opakowania": 100, "kcal": 628},
+                "Orzechy włoskie [g]": {"cena": 10.00, "waga_opakowania": 100, "kcal": 654},
+
+                # DEKORACJA I INNE
+                "Barwnik spożywczy [szt]": {"cena": 12.00, "waga_opakowania": 1, "kcal": 0},
+                "Podkład pod tort [szt]": {"cena": 5.00, "waga_opakowania": 1, "kcal": 0},
+                "Pudełko na tort [szt]": {"cena": 6.00, "waga_opakowania": 1, "kcal": 0},
+                "Rum / Likier do nasączania [ml]": {"cena": 40.00, "waga_opakowania": 500, "kcal": 230}
             },
             "przepisy": [],
             "kalendarz": [],
@@ -507,6 +531,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
