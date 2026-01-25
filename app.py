@@ -92,9 +92,9 @@ st.markdown("""
     <style>
         #MainMenu, footer, header {visibility: hidden;}
         
-        /* TŁO I GŁÓWNY KOLOR TEKSTU */
+        /* TŁO KREMOWE */
         .stApp { 
-            background-color: #FFFDF5; 
+            background-color: #FDF5E6; 
             color: #4A4A4A; 
         }
         
@@ -146,7 +146,7 @@ st.markdown("""
         /* Header Tytuł */
         .header-title {
             font-size: 1.5rem; font-weight: 900; color: #ff0aef;
-            text-align: center; margin-bottom: 5px; margin-top: -20px;
+            text-align: center; margin-bottom: 5px; margin-top: 0px;
             text-transform: uppercase; letter-spacing: 2px;
         }
 
@@ -168,6 +168,13 @@ if 'edit_ing_key' not in st.session_state: st.session_state['edit_ing_key'] = No
 data = load_data()
 
 #/////////////////////////// 4. Górne Menu ///////////////////////////
+# Centrowanie i wyświetlanie logo
+LOGO_PATH = "wktorty_logo.png"
+if os.path.exists(LOGO_PATH):
+    c1, c2, c3 = st.columns([1, 0.6, 1])
+    with c2:
+        st.image(LOGO_PATH, use_container_width=True)
+
 st.markdown('<div class="header-title">WK TORTY</div>', unsafe_allow_html=True)
 
 menu_cols = st.columns(5)
@@ -188,7 +195,6 @@ with menu_cols[4]:
 if 'menu' not in st.session_state: st.session_state['menu'] = "Kalendarz"
 menu = st.session_state['menu']
 st.write("---")
-
 #/////////////////////////// 5. Logika podstron ///////////////////////////
 #//--- 5.1. KALENDARZ ---//
 if menu == "Kalendarz":
@@ -557,4 +563,5 @@ elif menu == "Galeria":
                         del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
 
