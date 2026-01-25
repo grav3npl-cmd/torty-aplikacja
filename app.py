@@ -220,29 +220,35 @@ if 'success_msg' not in st.session_state: st.session_state['success_msg'] = None
 if 'edit_ing_key' not in st.session_state: st.session_state['edit_ing_key'] = None
 
 #/////////////////////////// 4. Górne Menu ///////////////////////////
-# Centrowanie i wyświetlanie logo
+# Centrowanie i wyświetlanie logo (bez napisu pod spodem)
 LOGO_PATH = "wktorty_logo.png"
 if os.path.exists(LOGO_PATH):
     c1, c2, c3 = st.columns([1, 0.6, 1])
     with c2:
         st.image(LOGO_PATH, use_container_width=True)
 
-st.markdown('<div class="header-title">WK TORTY</div>', unsafe_allow_html=True)
+# Usunięto: st.markdown('<div class="header-title">WK TORTY</div>', unsafe_allow_html=True)
 
+# Elastyczne kolumny menu - rozciągają się do krawędzi strony
 menu_cols = st.columns(5)
+
 with menu_cols[0]: 
-    if st.button("📅 Kalendarz"): st.session_state['menu'] = "Kalendarz"
+    if st.button("📅 Kalendarz", use_container_width=True): 
+        st.session_state['menu'] = "Kalendarz"
 with menu_cols[1]: 
-    if st.button("📖 Przepisy"): 
+    if st.button("📖 Przepisy", use_container_width=True): 
         st.session_state['menu'] = "Przepisy"
         st.session_state['fullscreen_recipe'] = None
         st.session_state['edit_recipe_index'] = None
 with menu_cols[2]: 
-    if st.button("➕ Dodaj"): st.session_state['menu'] = "Dodaj"
+    if st.button("➕ Dodaj", use_container_width=True): 
+        st.session_state['menu'] = "Dodaj"
 with menu_cols[3]: 
-    if st.button("📦 Magazyn"): st.session_state['menu'] = "Magazyn"
+    if st.button("📦 Magazyn", use_container_width=True): 
+        st.session_state['menu'] = "Magazyn"
 with menu_cols[4]: 
-    if st.button("🖼️ Galeria"): st.session_state['menu'] = "Galeria"
+    if st.button("🖼️ Galeria", use_container_width=True): 
+        st.session_state['menu'] = "Galeria"
 
 if 'menu' not in st.session_state: st.session_state['menu'] = "Kalendarz"
 menu = st.session_state['menu']
@@ -575,6 +581,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
