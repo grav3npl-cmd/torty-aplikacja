@@ -97,8 +97,7 @@ st.markdown("""
             background-color: #FDF5E6 !important; 
         }
 
-        /* 2. TOTALNA BLOKADA CIEMNEGO MOTYWU I CZARNYCH RAMEK */
-        /* Uderzamy we wszystkie kontenery i wymuszamy kolor obramowania #f56cb3 */
+        /* 2. BLOKADA CIEMNEGO MOTYWU I CZARNYCH RAMEK */
         div[data-testid="stForm"] *, 
         div[data-baseweb="select"] *, 
         div[data-baseweb="input"] *,
@@ -115,14 +114,40 @@ st.markdown("""
             border-color: #f56cb3 !important;
         }
 
-        /* Usuwamy czarną ramkę przy kliknięciu (focus) */
-        input:focus, textarea:focus, div:focus {
-            outline: none !important;
-            border: 2px solid #f56cb3 !important;
-            box-shadow: 0 0 5px rgba(245, 108, 179, 0.5) !important;
+        /* 3. NAPRAWA PRZYCISKÓW (ZAPISZ / ANULUJ / MENU) */
+        /* Celujemy w sam przycisk i wszystkie jego wewnętrzne divy/spany */
+        button[kind="secondaryFormSubmit"], button[kind="secondary"], .stButton > button {
+            background-color: #ffffff !important;
+            color: #ff0aef !important;
+            border: 2px solid #ff0aef !important;
+            border-radius: 10px !important;
+            font-weight: bold !important;
+            width: 100% !important;
+            height: auto !important;
+            padding: 10px !important;
+            transition: all 0.3s ease-in-out !important;
         }
 
-        /* Wymuszenie różowej ramki dla głównych widżetów */
+        /* Usunięcie białych ramek/tła wokół tekstu wewnątrz przycisku */
+        button[kind="secondaryFormSubmit"] *, button[kind="secondary"] *, .stButton > button * {
+            background-color: transparent !important;
+            color: inherit !important;
+            -webkit-text-fill-color: inherit !important;
+        }
+
+        /* HOVER - Cały przycisk na różowo, tekst na biało */
+        button[kind="secondaryFormSubmit"]:hover, button[kind="secondary"]:hover, .stButton > button:hover {
+            background-color: #ff0aef !important;
+            color: #ffffff !important;
+            border-color: #ff0aef !important;
+        }
+
+        button[kind="secondaryFormSubmit"]:hover *, button[kind="secondary"]:hover *, .stButton > button:hover * {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        /* 4. RAMKI PÓL WEJŚCIOWYCH */
         div[data-baseweb="input"], 
         div[data-baseweb="select"],
         div[data-testid="stFileUploader"] section {
@@ -131,41 +156,25 @@ st.markdown("""
             background-color: #ffffff !important;
         }
 
-        /* 3. NAPRAWA TEKSTU I IKON */
+        /* 5. TEKST I IKONY */
         input, textarea, select, span, label, p, svg {
             color: #1A1A1A !important;
             fill: #1A1A1A !important;
             -webkit-text-fill-color: #1A1A1A !important;
         }
 
-        /* 4. SPOLSZCZENIE UPLOADERA */
+        /* 6. SPOLSZCZENIE UPLOADERA */
         div[data-testid="stFileUploader"] section div::before { 
             content: "Przeciągnij zdjęcia tutaj"; 
-            color: #1A1A1A !important; 
-            font-weight: bold;
+            color: #1A1A1A !important; font-weight: bold;
         }
         div[data-testid="stFileUploader"] section div { font-size: 0px !important; }
         div[data-testid="stFileUploader"] section button span::after { 
-            content: "Wybierz zdjęcia"; 
-            font-size: 14px; 
+            content: "Wybierz zdjęcia"; font-size: 14px; 
         }
         div[data-testid="stFileUploader"] section button span { font-size: 0px !important; }
 
-        /* 5. PRZYCISKI */
-        .stButton > button, div.stFormSubmitButton > button { 
-            background-color: #ffffff !important; 
-            color: #ff0aef !important; 
-            border: 2px solid #ff0aef !important; 
-            border-radius: 10px !important; 
-            font-weight: bold !important;
-            width: 100%;
-        }
-        .stButton > button:hover, div.stFormSubmitButton > button:hover { 
-            background-color: #ff0aef !important; 
-            color: white !important; 
-        }
-
-        /* 6. KAFELKI ZLECEŃ / PRZEPISÓW */
+        /* 7. KAFELKI ZLECEŃ */
         .order-card {
             background-color: #ffffff !important;
             border: 2px solid #f56cb3 !important;
@@ -173,19 +182,13 @@ st.markdown("""
             padding: 15px;
             margin-bottom: 5px;
         }
-        
-        /* Poprawka dla listy rozwijanej li */
-        li[role="option"]:hover {
-            background-color: #f56cb3 !important;
-        }
-        li[role="option"]:hover * {
-            color: #ffffff !important;
-        }
     </style>
 """, unsafe_allow_html=True)
 
 # Inicjalizacja danych
-data = load_data()
+if 'data' not in st.session_state:
+    st.session_state['data'] = load_data()
+data = st.session_state['data']
 
 if 'temp_skladniki' not in st.session_state: st.session_state['temp_skladniki'] = {}
 if 'show_add_order' not in st.session_state: st.session_state['show_add_order'] = False
@@ -488,6 +491,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
