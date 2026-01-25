@@ -254,9 +254,10 @@ st.write("---")
 #/////////////////////////// 5. Logika podstron ///////////////////////////
 #//--- 5.1. KALENDARZ ---//
 if menu == "Kalendarz":
-    st.caption("PLANER ZAMÓWIEŃ")
+    st.caption("PLANER ZAMÓWIEŃ (STYL BOK)")
     
-    if st.button("➕ Dodaj / Zamknij", type="primary"):
+    # Przycisk dodawania - szeroki jak w aplikacji mobilnej
+    if st.button("➕ NOWE ZLECENIE", use_container_width=True, type="primary"):
         st.session_state['show_add_order'] = not st.session_state['show_add_order']
         st.session_state['edit_order_index'] = None
 
@@ -265,21 +266,23 @@ if menu == "Kalendarz":
     
     if st.session_state['show_add_order'] or is_edit_mode:
         with st.container(border=True):
+            st.markdown("### 📝 Dane zamówienia")
             domyslne = data["kalendarz"][idx_edit] if is_edit_mode else {}
             with st.form("kalendarz_form"):
                 d_val = date.fromisoformat(domyslne['data']) if 'data' in domyslne else date.today()
-                data_zamowienia = st.date_input("Data", value=d_val)
-                klient = st.text_input("Klient", value=domyslne.get('klient', ''))
+                data_zamowienia = st.date_input("Termin odbioru", value=d_val)
+                klient = st.text_input("Imię i nazwisko klienta", value=domyslne.get('klient', ''))
                 
+                c1, c2 = st.columns(2)
                 lista_nazw = ["Własna kompozycja"] + [p["nazwa"] for p in data["przepisy"]]
-                wybrany_tort = st.selectbox("Tort", lista_nazw)
-                srednica_zam = st.number_input("Fi (cm)", value=20)
+                wybrany_tort = c1.selectbox("Rodzaj tortu", lista_nazw)
+                srednica_zam = c2.number_input("Średnica Fi (cm)", value=20)
 
                 opis_val = domyslne.get('opis', '').split('[AUTO-WYCENA')[0] if is_edit_mode else ""
-                opis_dodatkowy = st.text_area("Opis", value=opis_val)
-                uploaded_order_imgs = st.file_uploader("Zdjęcia", type=['jpg','png'], accept_multiple_files=True)
+                opis_dodatkowy = st.text_area("Uwagi do zamówienia", value=opis_val)
+                uploaded_order_imgs = st.file_uploader("Inspiracje / Zdjęcia", type=['jpg','png'], accept_multiple_files=True)
 
-                if st.form_submit_button("Zapisz"):
+                if st.form_submit_button("ZAPISZ I DODAJ DO LISTY"):
                     info_cenowe = ""
                     if wybrany_tort != "Własna kompozycja":
                         przepis = next((p for p in data["przepisy"] if p["nazwa"] == wybrany_tort), None)
@@ -308,38 +311,54 @@ if menu == "Kalendarz":
                     save_data(data)
                     st.rerun()
 
+    st.write("") # Odstęp
+
     if not data["kalendarz"]:
-        st.info("Brak zleceń.")
+        st.info("Brak aktywnych zleceń w systemie.")
     else:
+        # Nagłówki listy (opcjonalne, dla stylu BOK)
         for i, wpis in enumerate(data["kalendarz"]):
+            # Każde zlecenie to jeden poziomy pasek (row)
             with st.container(border=True):
-                c1, c2 = st.columns([3, 1])
-                c1.markdown(f"**{wpis['klient']}**")
-                c1.caption(f"{wpis['data']}")
-                c2.markdown("✅" if wpis.get("wykonane") else "⏳", unsafe_allow_html=True)
+                # Główny wiersz: DATA | KLIENT | STATUS
+                cols = st.columns([1, 2, 1])
                 
-                if wpis.get('opis'): st.write(wpis['opis'])
+                # Data w formacie mBOK (pogrubiona)
+                cols[0].markdown(f"📅 **{wpis['data']}**")
                 
-                if wpis.get('zdjecia'):
-                    cols_img = st.columns(4)
-                    for j, img_path in enumerate(wpis['zdjecia'][:4]):
-                        if os.path.exists(img_path):
-                            with cols_img[j]: st.image(img_path)
+                # Nazwa klienta i krótki opis
+                cols[1].markdown(f"👤 **{wpis['klient']}**")
                 
-                st.write("")
-                b1, b2, b3 = st.columns(3)
-                if b1.button("Status", key=f"s_{i}"):
-                    data["kalendarz"][i]["wykonane"] = not data["kalendarz"][i]["wykonane"]
-                    save_data(data)
-                    st.rerun()
-                if b2.button("Edytuj", key=f"e_{i}"):
-                    st.session_state['edit_order_index'] = i
-                    st.session_state['show_add_order'] = False 
-                    st.rerun()
-                if b3.button("Usuń", key=f"d_{i}"):
-                    data["kalendarz"].pop(i)
-                    save_data(data)
-                    st.rerun()
+                # Status z kolorem (Różowy neon zamiast niebieskiego PGNiG)
+                status_text = "GOTOWE" if wpis.get("wykonane") else "W REALIZACJI"
+                status_color = "#00ff00" if wpis.get("wykonane") else "#ff0aef"
+                cols[2].markdown(f"<div style='text-align:right; color:{status_color}; font-weight:bold;'>{status_text}</div>", unsafe_allow_html=True)
+                
+                # Rozwijane szczegóły (mBOK style)
+                with st.expander("Szczegóły zlecenia"):
+                    st.write(wpis.get('opis', 'Brak dodatkowego opisu.'))
+                    if wpis.get('zdjecia'):
+                        st.write("Załączniki:")
+                        cols_img = st.columns(4)
+                        for j, img_path in enumerate(wpis['zdjecia']):
+                            if os.path.exists(img_path):
+                                with cols_img[j % 4]: st.image(img_path)
+                    
+                    st.write("---")
+                    # Przyciski akcji wewnątrz detali
+                    b1, b2, b3 = st.columns(3)
+                    if b1.button("Zmień status", key=f"s_{i}", use_container_width=True):
+                        data["kalendarz"][i]["wykonane"] = not data["kalendarz"][i]["wykonane"]
+                        save_data(data)
+                        st.rerun()
+                    if b2.button("Edytuj", key=f"e_{i}", use_container_width=True):
+                        st.session_state['edit_order_index'] = i
+                        st.session_state['show_add_order'] = False 
+                        st.rerun()
+                    if b3.button("Usuń", key=f"d_{i}", use_container_width=True):
+                        data["kalendarz"].pop(i)
+                        save_data(data)
+                        st.rerun()
 
 #//--- 5.2. MAGAZYN ---//
 elif menu == "Magazyn":
@@ -619,6 +638,7 @@ elif menu == "Galeria":
                         del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
 
 
 
