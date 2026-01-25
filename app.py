@@ -92,24 +92,22 @@ st.markdown("""
     <style>
         #MainMenu, footer, header {visibility: hidden;}
         
-        /* TŁO KREMOWE CAŁOŚCI */
+        /* 1. TŁO GŁÓWNE APLIKACJI */
         .stApp { 
-            background-color: #FDF5E6; 
-            color: #1A1A1A; /* Bardzo ciemny grafit zamiast czarnego */
+            background-color: #FDF5E6 !important; 
         }
 
-        /* GŁÓWNY KONTENER */
-        [data-testid="stMainViewContainer"] > section > div {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 5% !important;
+        /* 2. WYMUSZENIE BIAŁEGO TŁA DLA FORMULARZY I POL (Fix dla ciemnych kafelków) */
+        /* Celujemy w kontenery formularzy i wszystkie typy inputów */
+        div[data-testid="stForm"], 
+        div[data-testid="stVerticalBlock"] > div {
+            background-color: transparent !important;
         }
 
-        /* TOTALNA BLOKADA CIEMNYCH TŁA DLA POLA WPISYWANIA I LIST */
+        /* Białe tło dla: Input, Textarea, Select, Date, Number */
         div[data-baseweb="input"], 
         div[data-baseweb="textarea"], 
         div[data-baseweb="select"], 
-        div[role="combobox"],
         div[data-testid="stFileUploader"],
         .stSelectbox div,
         .stNumberInput div,
@@ -117,24 +115,35 @@ st.markdown("""
         .stTextInput div,
         .stTextArea div {
             background-color: #ffffff !important;
-            color: #1A1A1A !important;
+            border: 1px solid #f56cb3 !important; /* Różowa ramka pola */
+            border-radius: 8px !important;
         }
 
-        /* Wymuszenie grafitowego tekstu wewnątrz inputów */
-        input, textarea, select, span {
+        /* 3. TEKST - Musi być ciemny grafit/czarny, żeby był widoczny na białym */
+        input, textarea, select, span, p, label {
             color: #1A1A1A !important;
             -webkit-text-fill-color: #1A1A1A !important;
         }
 
-        /* SPOLSZCZENIE UPLOADERA */
+        /* Naprawa kontrastu dla Placeholdera (YYYY/MM/DD) */
+        input::placeholder {
+            color: #999999 !important;
+            -webkit-text-fill-color: #999999 !important;
+        }
+
+        /* 4. SPOLSZCZENIE I STYL UPLOADERA */
+        div[data-testid="stFileUploader"] section {
+            background-color: #ffffff !important;
+            border: 2px dashed #f56cb3 !important;
+        }
         div[data-testid="stFileUploader"] section button span::after { content: "Wybierz pliki"; font-size: 14px; }
         div[data-testid="stFileUploader"] section button span { font-size: 0px; }
-        div[data-testid="stFileUploader"] section div::before { content: "Przeciągnij zdjęcia tutaj"; color: #f56cb3; font-weight: bold; }
+        div[data-testid="stFileUploader"] section div::before { content: "Przeciągnij zdjęcia tutaj"; color: #1A1A1A; font-weight: bold; }
         div[data-testid="stFileUploader"] section div { font-size: 0px; }
 
-        /* KAFELKI ZLECEŃ */
+        /* 5. KAFELKI ZLECEŃ */
         .order-card {
-            background-color: #ffffff;
+            background-color: #ffffff !important;
             border: 2px solid #f56cb3 !important;
             border-radius: 15px;
             padding: 15px;
@@ -142,16 +151,17 @@ st.markdown("""
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        /* PRZYCISKI MENU */
-        .stButton > button { 
+        /* 6. PRZYCISKI MENU I FORMULARZA */
+        .stButton > button, div.stFormSubmitButton > button { 
             background-color: #ffffff !important; 
             color: #ff0aef !important; 
             border: 2px solid #ff0aef !important; 
-            border-radius: 10px; 
-            font-weight: bold;
+            border-radius: 10px !important; 
+            font-weight: bold !important;
             width: 100%;
+            transition: 0.3s ease;
         }
-        .stButton > button:hover { 
+        .stButton > button:hover, div.stFormSubmitButton > button:hover { 
             background-color: #ff0aef !important; 
             color: white !important; 
         }
@@ -160,16 +170,16 @@ st.markdown("""
             font-size: 1.6rem; font-weight: 900; color: #ff0aef;
             text-align: center; text-transform: uppercase; letter-spacing: 2px;
         }
-        
-        /* Kolor etykiet pól */
-        label { color: #1A1A1A !important; font-weight: bold !important; }
+
+        /* Nagłówki sekcji */
+        h1, h2, h3, h4 {
+            color: #1A1A1A !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
-# Inicjalizacja danych na samym początku sekcji 3
-if 'data' not in st.session_state:
-    st.session_state['data'] = load_data()
-data = st.session_state['data']
+# Przeładowanie danych przy starcie
+data = load_data()
 
 if 'temp_skladniki' not in st.session_state: st.session_state['temp_skladniki'] = {}
 if 'show_add_order' not in st.session_state: st.session_state['show_add_order'] = False
@@ -472,6 +482,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
