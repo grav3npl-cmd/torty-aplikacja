@@ -97,10 +97,11 @@ st.markdown("""
             background-color: #FDF5E6 !important; 
         }
 
-        /* 2. TOTALNA BLOKADA CIEMNEGO MOTYWU (Wszystkie pola i listy rozwijane) */
-        /* Uderzamy w pola, formularze i listy opcji (li[role="option"]) */
+        /* 2. TOTALNA BLOKADA CIEMNEGO MOTYWU I CZARNYCH RAMEK */
+        /* Uderzamy we wszystkie kontenery i wymuszamy kolor obramowania #f56cb3 */
         div[data-testid="stForm"] *, 
         div[data-baseweb="select"] *, 
+        div[data-baseweb="input"] *,
         div[data-baseweb="popover"] *, 
         div[role="listbox"] *,
         li[role="option"],
@@ -111,20 +112,17 @@ st.markdown("""
         div[data-testid="stDateInput"] * {
             background-color: #ffffff !important;
             color: #1A1A1A !important;
+            border-color: #f56cb3 !important;
         }
 
-        /* Specyficzna poprawka dla elementu <li> z listy rozwijanej */
-        li[role="option"] {
-            border-bottom: 1px solid #eeeeee !important;
-        }
-        li[role="option"]:hover {
-            background-color: #f56cb3 !important; /* Różowe podświetlenie przy najechaniu */
-        }
-        li[role="option"]:hover * {
-            color: #ffffff !important; /* Biały tekst przy najechaniu na opcję */
+        /* Usuwamy czarną ramkę przy kliknięciu (focus) */
+        input:focus, textarea:focus, div:focus {
+            outline: none !important;
+            border: 2px solid #f56cb3 !important;
+            box-shadow: 0 0 5px rgba(245, 108, 179, 0.5) !important;
         }
 
-        /* Przywrócenie różowej ramki dla kontenerów */
+        /* Wymuszenie różowej ramki dla głównych widżetów */
         div[data-baseweb="input"], 
         div[data-baseweb="select"],
         div[data-testid="stFileUploader"] section {
@@ -167,13 +165,21 @@ st.markdown("""
             color: white !important; 
         }
 
-        /* 6. KAFELKI ZLECEŃ */
+        /* 6. KAFELKI ZLECEŃ / PRZEPISÓW */
         .order-card {
             background-color: #ffffff !important;
             border: 2px solid #f56cb3 !important;
             border-radius: 15px;
             padding: 15px;
             margin-bottom: 5px;
+        }
+        
+        /* Poprawka dla listy rozwijanej li */
+        li[role="option"]:hover {
+            background-color: #f56cb3 !important;
+        }
+        li[role="option"]:hover * {
+            color: #ffffff !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -482,6 +488,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
