@@ -352,292 +352,126 @@ if menu == "Kalendarz":
 #//--- 5.2. MAGAZYN ---//
 elif menu == "Magazyn":
     st.caption("MAGAZYN SKŁADNIKÓW")
-    
-    with st.expander("➕ Dodaj produkt"):
+    with st.expander("➕ DODAJ NOWY PRODUKT"):
         with st.form("magazyn_add"):
             c1, c2 = st.columns(2)
-            nn = c1.text_input("Nazwa")
-            nk = c2.number_input("Kcal", min_value=0)
-            nw = c1.number_input("Waga (g/szt)", min_value=1)
-            np = c2.number_input("Cena", min_value=0.01)
-            if st.form_submit_button("Zapisz") and nn:
+            nn = c1.text_input("Nazwa produktu")
+            nk = c2.number_input("Kcal na 100g/szt", min_value=0)
+            nw = c1.number_input("Waga opakowania (g/szt)", min_value=1)
+            np = c2.number_input("Cena opakowania", min_value=0.01)
+            if st.form_submit_button("ZAPISZ W MAGAZYNIE", use_container_width=True) and nn:
                 data["skladniki"][nn] = {"cena": np, "waga_opakowania": nw, "kcal": nk}
-                save_data(data)
-                st.rerun()
+                save_data(data); st.rerun()
 
     st.write("---")
-    
     if data["skladniki"]:
         for k, v in list(data["skladniki"].items()):
             if st.session_state['edit_ing_key'] == k:
                 with st.container(border=True):
-                    st.write(f"✏️ **{k}**")
                     with st.form(f"ef_{k}"):
+                        st.write(f"✏️ Edytujesz: **{k}**")
                         c1, c2, c3 = st.columns(3)
                         nk = c1.number_input("Kcal", value=v['kcal'])
                         nw = c2.number_input("Waga", value=v['waga_opakowania'])
                         np = c3.number_input("Cena", value=v['cena'])
-                        if st.form_submit_button("Zapisz"):
+                        c_b1, c_b2 = st.columns(2)
+                        if c_b1.form_submit_button("ZAPISZ"):
                             data["skladniki"][k] = {"cena": np, "waga_opakowania": nw, "kcal": nk}
-                            save_data(data)
-                            st.session_state['edit_ing_key'] = None
-                            st.rerun()
+                            save_data(data); st.session_state['edit_ing_key'] = None; st.rerun()
+                        if c_b2.form_submit_button("ANULUJ"):
+                            st.session_state['edit_ing_key'] = None; st.rerun()
             else:
-                with st.container(border=True):
-                    col_txt, col_btn = st.columns([2, 1])
-                    with col_txt:
-                        st.markdown(f"**{k}**")
-                        st.caption(f"{v['kcal']}kcal | {v['waga_opakowania']}g | {v['cena']:.2f}zł")
-                    with col_btn:
-                        b_e, b_d = st.columns(2)
-                        if b_e.button("✏️", key=f"ed_{k}"):
-                            st.session_state['edit_ing_key'] = k
-                            st.rerun()
-                        if b_d.button("🗑️", key=f"del_{k}"):
-                            del data["skladniki"][k]
-                            save_data(data)
-                            st.rerun()
-    else:
-        st.info("Magazyn pusty.")
+                st.markdown(f'<div class="order-card"><div style="display: flex; justify-content: space-between; align-items: center;"><div><b>{k}</b><br><small>{v["kcal"]} kcal | {v["waga_opakowania"]}g</small></div><div style="text-align: right; color: #00ff00; font-weight: bold;">{v["cena"]:.2f} zł</div></div></div>', unsafe_allow_html=True)
+                c_e, c_d = st.columns(2, gap="small")
+                if c_e.button("Edytuj", key=f"ed_{k}", use_container_width=True):
+                    st.session_state['edit_ing_key'] = k; st.rerun()
+                if c_d.button("Usuń", key=f"del_{k}", use_container_width=True):
+                    del data["skladniki"][k]; save_data(data); st.rerun()
 
 #//--- 5.3. DODAJ PRZEPIS ---//
 elif menu == "Dodaj":
-    if st.session_state['success_msg']:
-        st.success(st.session_state['success_msg'])
-        st.session_state['success_msg'] = None
-
     st.caption("NOWY PRZEPIS")
-    
-    with st.expander("1. Składniki", expanded=True):
+    with st.container(border=True):
+        st.subheader("1. Wybierz składniki")
         c1, c2, c3 = st.columns([2,1,1])
-        wyb = c1.selectbox("Składnik", list(data["skladniki"].keys()), label_visibility="collapsed")
-        il = c2.number_input("Ilość", min_value=0, label_visibility="collapsed")
-        if c3.button("Dodaj"):
+        wyb = c1.selectbox("Produkt", list(data["skladniki"].keys()))
+        il = c2.number_input("Ilość (g/szt)", min_value=0)
+        if c3.button("DODAJ", use_container_width=True):
             if il > 0:
-                cur = st.session_state['temp_skladniki'].get(wyb, 0)
-                st.session_state['temp_skladniki'][wyb] = cur + il
+                st.session_state['temp_skladniki'][wyb] = st.session_state['temp_skladniki'].get(wyb, 0) + il
                 st.rerun()
-        
         if st.session_state['temp_skladniki']:
             st.info(", ".join([f"{k}: {v}" for k,v in st.session_state['temp_skladniki'].items()]))
-            if st.button("Wyczyść listę"):
-                st.session_state['temp_skladniki'] = {}
-                st.rerun()
+            if st.button("WYCZYŚĆ LISTĘ SKŁADNIKÓW"):
+                st.session_state['temp_skladniki'] = {}; st.rerun()
 
     with st.form("new_recipe"):
-        st.write("2. Dane")
-        nazwa = st.text_input("Nazwa")
-        opis = st.text_area("Instrukcja")
+        st.subheader("2. Szczegóły przepisu")
+        nazwa = st.text_input("Nazwa tortu")
+        opis = st.text_area("Instrukcja przygotowania")
         imgs = st.file_uploader("Zdjęcia", accept_multiple_files=True)
-        
-        c1, c2 = st.columns(2)
-        fi = c1.number_input("Fi", 15)
+        c1, c2, c3, c4 = st.columns(4)
+        fi = c1.number_input("Fi (cm)", 15)
         marza = c2.number_input("Marża %", 10)
-        czas = c1.number_input("Czas min", 180)
-        stawka = c2.number_input("Stawka", 20)
-        
-        st.write("Oceny")
-        s1 = st.slider("Wygląd", 1, 5, 5)
-        s2 = st.slider("Smak", 1, 5, 5)
-        s3 = st.slider("Trudność", 1, 5, 3)
-        
-        if st.form_submit_button("ZAPISZ"):
+        czas = c3.number_input("Czas (min)", 180)
+        stawka = c4.number_input("Zarobek/h", 20)
+        if st.form_submit_button("ZAPISZ PRZEPIS", use_container_width=True):
             if nazwa and st.session_state['temp_skladniki']:
-                s_imgs = save_uploaded_files(imgs)
-                nowy = {
-                    "nazwa": nazwa, "opis": opis, "zdjecia": s_imgs,
-                    "srednica": fi, "skladniki_przepisu": st.session_state['temp_skladniki'],
-                    "oceny": {"wyglad": s1, "smak": s2, "trudnosc": s3},
-                    "marza": marza, "czas": czas, "stawka_h": stawka
-                }
-                data["przepisy"].append(nowy)
-                save_data(data)
-                st.session_state['temp_skladniki'] = {}
-                st.session_state['success_msg'] = "Dodano!"
-                st.rerun()
+                data["przepisy"].append({"nazwa": nazwa, "opis": opis, "zdjecia": save_uploaded_files(imgs), "srednica": fi, "skladniki_przepisu": st.session_state['temp_skladniki'], "marza": marza, "czas": czas, "stawka_h": stawka})
+                save_data(data); st.session_state['temp_skladniki'] = {}; st.session_state['menu'] = "Przepisy"; st.rerun()
 
 #//--- 5.4. PRZEPISY (TORTY) ---//
 elif menu == "Przepisy":
     if st.session_state['edit_recipe_index'] is not None:
-        # --- Tryb Edycji ---
         idx = st.session_state['edit_recipe_index']
-        p_edit = data["przepisy"][idx]
-        current_oceny = p_edit.get('oceny', {'wyglad':5, 'smak':5, 'trudnosc':3})
-        
-        with st.container(border=True):
-            st.subheader(f"✏️ Edycja: {p_edit['nazwa']}")
-            if st.button("⬅️ Anuluj"):
-                st.session_state['edit_recipe_index'] = None
-                st.rerun()
-                
-            with st.form("edit_recipe_form"):
-                e_nazwa = st.text_input("Nazwa", value=p_edit['nazwa'])
-                e_opis = st.text_area("Instrukcja", value=p_edit['opis'])
-                
-                c1, c2 = st.columns(2)
-                e_srednica = c1.number_input("Fi", value=p_edit.get('srednica', 15))
-                e_marza = c2.number_input("Marża", value=p_edit.get('marza', 10))
-                e_czas = c1.number_input("Czas", value=p_edit.get('czas', 180))
-                e_stawka = c2.number_input("Stawka", value=p_edit.get('stawka_h', 20))
-                
-                st.write("**Oceny:**")
-                e_look = st.slider("Wygląd", 1, 5, current_oceny.get('wyglad', 5))
-                e_taste = st.slider("Smak", 1, 5, current_oceny.get('smak', 5))
-                e_diff = st.slider("Trudność", 1, 5, current_oceny.get('trudnosc', 3))
-
-                st.write("**Zdjęcia:**")
-                imgs_to_keep = []
-                if p_edit.get('zdjecia'):
-                    cols_pics = st.columns(3)
-                    for i, path in enumerate(p_edit['zdjecia']):
-                        with cols_pics[i % 3]:
-                            if os.path.exists(path):
-                                st.image(path)
-                                if not st.checkbox("Usuń", key=f"del_img_e_{i}"):
-                                    imgs_to_keep.append(path)
-                
-                new_imgs_upload = st.file_uploader("Dodaj nowe", type=['jpg', 'png'], accept_multiple_files=True)
-                
-                if st.form_submit_button("Zapisz Zmiany"):
-                    p_edit['nazwa'] = e_nazwa
-                    p_edit['opis'] = e_opis
-                    p_edit['srednica'] = e_srednica
-                    p_edit['marza'] = e_marza
-                    p_edit['czas'] = e_czas
-                    p_edit['stawka_h'] = e_stawka
-                    p_edit['oceny'] = {'wyglad': e_look, 'smak': e_taste, 'trudnosc': e_diff}
-                    added_paths = save_uploaded_files(new_imgs_upload)
-                    p_edit['zdjecia'] = imgs_to_keep + added_paths
-                    
-                    data["przepisy"][idx] = p_edit
-                    save_data(data)
-                    st.session_state['edit_recipe_index'] = None
-                    st.rerun()
-
-    elif st.session_state['fullscreen_recipe'] is not None:
-        # --- Pełny ekran przepisu ---
-        idx = st.session_state['fullscreen_recipe']
         p = data["przepisy"][idx]
-        if st.button("⬅️ Wróć"):
-            st.session_state['fullscreen_recipe'] = None
-            st.rerun()
-            
-        st.title(p['nazwa'])
-        if p.get('zdjecia') and len(p['zdjecia']) > 0 and os.path.exists(p['zdjecia'][0]):
-            st.image(p['zdjecia'][0], use_container_width=True)
-        elif os.path.exists(DEFAULT_IMG):
-            st.image(DEFAULT_IMG, use_container_width=True)
-
-        st.write(f"Cena: **{oblicz_cene_tortu(p, data['skladniki'])} zł**")
-        st.write("---")
+        with st.form("edit_recipe"):
+            st.subheader(f"✏️ Edytujesz: {p['nazwa']}")
+            e_nazwa = st.text_input("Nazwa", value=p['nazwa'])
+            e_opis = st.text_area("Instrukcja", value=p['opis'])
+            c1, c2, c3, c4 = st.columns(4)
+            e_fi = c1.number_input("Fi", value=p.get('srednica', 20))
+            e_marza = c2.number_input("Marża", value=p.get('marza', 10))
+            e_czas = c3.number_input("Czas", value=p.get('czas', 180))
+            e_stawka = c4.number_input("Stawka", value=p.get('stawka_h', 20))
+            if st.form_submit_button("ZAPISZ ZMIANY"):
+                p.update({"nazwa": e_nazwa, "opis": e_opis, "srednica": e_fi, "marza": e_marza, "czas": e_czas, "stawka_h": e_stawka})
+                save_data(data); st.session_state['edit_recipe_index'] = None; st.rerun()
+            if st.button("ANULUJ"):
+                st.session_state['edit_recipe_index'] = None; st.rerun()
+    elif st.session_state['fullscreen_recipe'] is not None:
+        p = data["przepisy"][st.session_state['fullscreen_recipe']]
+        if st.button("⬅️ WRÓĆ DO LISTY"): st.session_state['fullscreen_recipe'] = None; st.rerun()
+        st.markdown(f'<div class="order-card"><h1>{p["nazwa"]}</h1></div>', unsafe_allow_html=True)
+        if p.get('zdjecia'): st.image(p['zdjecia'][0], use_container_width=True)
+        st.write(f"Cena bazowa: **{oblicz_cene_tortu(p, data['skladniki'])} zł**")
         formatuj_instrukcje(p['opis'])
-        
-        if p.get('zdjecia') and len(p['zdjecia']) > 1:
-            st.write("Galeria:")
-            g_cols = st.columns(2)
-            for i, img in enumerate(p["zdjecia"]):
-                if os.path.exists(img):
-                    with g_cols[i % 2]: st.image(img)
-
     else:
-        # --- Lista kafelków ---
-        st.caption("LISTA PRZEPISÓW")
-        search = st.text_input("Szukaj", label_visibility="collapsed", placeholder="Szukaj...")
-        lista = [p for p in data["przepisy"] if search.lower() in p["nazwa"].lower()]
-        
-        for i, p in enumerate(lista):
-            with st.container(border=True):
-                c_img, c_info = st.columns([1, 2])
-                with c_img:
-                    if p.get("zdjecia") and os.path.exists(p["zdjecia"][0]):
-                        st.image(p["zdjecia"][0])
-                    elif os.path.exists(DEFAULT_IMG):
-                        st.image(DEFAULT_IMG) 
-                    else: st.write("🍰")
-
-                with c_info:
-                    st.markdown(f"**{p['nazwa']}**")
-                    oc = p.get('oceny', {})
-                    avg = (oc.get('wyglad',0) + oc.get('smak',0))/2
-                    st.caption(f"{render_stars(avg)}")
-                    cena = oblicz_cene_tortu(p, data["skladniki"])
-                    st.markdown(f"<span style='color:#00ff00; font-weight:bold'>{cena} zł</span>", unsafe_allow_html=True)
-                
-                st.write("")
-                b1, b2, b3 = st.columns(3)
-                real_idx = data["przepisy"].index(p)
-                if b1.button("👁️", key=f"op_{i}"):
-                    st.session_state['fullscreen_recipe'] = real_idx
-                    st.rerun()
-                if b2.button("✏️", key=f"edp_{i}"):
-                    st.session_state['edit_recipe_index'] = real_idx
-                    st.rerun()
-                if b3.button("🗑️", key=f"del_rec_{i}"):
-                    data["przepisy"].pop(real_idx)
-                    save_data(data)
-                    st.rerun()
+        search = st.text_input("Szukaj tortu...", placeholder="Wpisz nazwę...")
+        for i, p in enumerate(data["przepisy"]):
+            if search.lower() in p["nazwa"].lower():
+                st.markdown(f'<div class="order-card"><div style="display: flex; justify-content: space-between; align-items: center;"><div><b>{p["nazwa"]}</b><br><small>Fi: {p.get("srednica", 20)}cm</small></div><div style="color: #00ff00; font-weight: bold;">{oblicz_cene_tortu(p, data["skladniki"])} zł</div></div></div>', unsafe_allow_html=True)
+                c1, c2, c3 = st.columns(3, gap="small")
+                if c1.button("👁️ Otwórz", key=f"v_{i}", use_container_width=True): st.session_state['fullscreen_recipe'] = i; st.rerun()
+                if c2.button("✏️ Edytuj", key=f"re_{i}", use_container_width=True): st.session_state['edit_recipe_index'] = i; st.rerun()
+                if c3.button("🗑️ Usuń", key=f"rd_{i}", use_container_width=True): data["przepisy"].pop(i); save_data(data); st.rerun()
 
 #//--- 5.5. GALERIA ---//
 elif menu == "Galeria":
-    st.caption("GALERIA ZDJĘĆ")
-    
-    with st.expander("📷 Dodaj zdjęcie do przepisu", expanded=False):
-        c_add1, c_add2 = st.columns(2)
-        with c_add1:
-            target_recipe_name = st.selectbox("Wybierz przepis:", [p['nazwa'] for p in data['przepisy']])
-        with c_add2:
-            new_gal_img = st.file_uploader("Wybierz zdjęcie", type=['jpg','png'])
-        
-        if st.button("Dodaj do wybranego tortu"):
-            if new_gal_img and target_recipe_name:
-                path = save_uploaded_files([new_gal_img])[0]
-                for p in data['przepisy']:
-                    if p['nazwa'] == target_recipe_name:
-                        if 'zdjecia' not in p: p['zdjecia'] = []
-                        p['zdjecia'].append(path)
-                        save_data(data)
-                        st.success(f"Dodano do: {target_recipe_name}")
-                        st.rerun()
-                        break
-
-    wszystkie_zdjecia = []
+    st.caption("GALERIA TWOICH DZIEŁ")
+    wszystkie = []
     for idx, p in enumerate(data["przepisy"]):
-        if p.get("zdjecia"):
-            for img_idx, fotka in enumerate(p["zdjecia"]):
-                if not os.path.exists(fotka): continue
-                wszystkie_zdjecia.append({
-                    "src": fotka, "name": p["nazwa"], "recipe_idx": idx,
-                    "img_idx_in_recipe": img_idx, "type": "recipe"
-                })
-
-    if not wszystkie_zdjecia:
-        st.info("Brak wgranych zdjęć.")
+        for f in p.get("zdjecia", []):
+            if os.path.exists(f): wszystkie.append({"src": f, "name": p["nazwa"], "idx": idx})
+    if not wszystkie: st.info("Brak zdjęć w galerii.")
     else:
         cols = st.columns(2)
-        for i, item in enumerate(wszystkie_zdjecia):
+        for i, item in enumerate(wszystkie):
             with cols[i % 2]:
-                with st.container(border=True):
-                    st.image(item["src"])
-                    cb1, cb2 = st.columns([1, 1])
-                    if cb1.button("👁️", key=f"g_go_{i}"):
-                        st.session_state['menu'] = "Przepisy"
-                        st.session_state['fullscreen_recipe'] = item["recipe_idx"]
-                        st.rerun()
-                    if cb2.button("🗑️", key=f"g_del_{i}"):
-                        del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
-                        save_data(data)
-                        st.rerun()
-
-
-
-
-
-
-
-
-
-
-
+                st.markdown(f'<div class="order-card"><b>{item["name"]}</b></div>', unsafe_allow_html=True)
+                st.image(item["src"], use_container_width=True)
+                if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
+                    st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
 
 
 
