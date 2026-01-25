@@ -92,7 +92,7 @@ st.markdown("""
     <style>
         #MainMenu, footer, header {visibility: hidden;}
         
-        /* TŁO KREMOWE */
+        /* TŁO KREMOWE CAŁOŚCI */
         .stApp { 
             background-color: #FDF5E6; 
             color: #4A4A4A; 
@@ -122,16 +122,24 @@ st.markdown("""
             min-width: 0 !important;
         }
         
-        /* POLA WPISYWANIA (Input, Textarea, Number) - BIAŁE TŁO */
-        div[data-baseweb="input"], div[data-baseweb="textarea"], select {
+        /* KOMPLEKSOWE CZYSZCZENIE KOLORÓW WIDGETÓW (BIAŁE TŁO) */
+        /* Pola tekstowe, listy rozwijane, daty i pola liczbowe */
+        div[data-baseweb="input"], 
+        div[data-baseweb="textarea"], 
+        div[data-baseweb="select"], 
+        div[role="combobox"],
+        .stNumberInput div,
+        .stDateInput div {
             background-color: #ffffff !important;
             border-radius: 8px !important;
+            color: #4A4A4A !important;
         }
-        
-        input, textarea {
+
+        /* Wymuszenie koloru tekstu wewnątrz wszystkich pól */
+        input, textarea, select, span[data-baseweb="select"] {
             background-color: #ffffff !important;
             color: #4A4A4A !important;
-            border: 1px solid #E0E0E0 !important;
+            -webkit-text-fill-color: #4A4A4A !important;
         }
 
         /* Styl dla labeli (napisów nad polami) */
@@ -140,11 +148,19 @@ st.markdown("""
             font-weight: bold !important;
         }
 
+        /* Styl dla ramek expanderów (magazyn, dodaj składnik) */
+        .stExpander {
+            background-color: #ffffff !important;
+            border: 1px solid #E0E0E0 !important;
+            border-radius: 12px !important;
+        }
+
         /* Przycisk Form Submit */
         div.stFormSubmitButton > button {
             background-color: #ff0aef !important;
             color: white !important;
             width: 100% !important;
+            border: none !important;
         }
 
         /* Przyciski Menu - Neonowy róż */
@@ -603,6 +619,7 @@ elif menu == "Galeria":
                         del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
 
 
 
