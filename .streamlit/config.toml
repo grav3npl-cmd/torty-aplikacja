@@ -1,8 +1,16 @@
 [theme]
+# Główny różowy kolor akcentów (przyciski, suwaki)
 primaryColor = "#ff0aef"
-backgroundColor = "#1e1e1e"
-secondaryBackgroundColor = "#252525"
-textColor = "#ffffff"
+
+# Tło główne (ustawiamy na Twoje kremowe)
+backgroundColor = "#FDF5E6"
+
+# Tło bocznych paneli i formularzy (lekko ciemniejszy krem lub biały)
+secondaryBackgroundColor = "#ffffff"
+
+# Kolor tekstu (wymuszamy Twój grafitowy/czarny)
+textColor = "#1A1A1A"
+
 font = "sans serif"
 
 [server]
