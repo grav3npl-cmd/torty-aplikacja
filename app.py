@@ -95,7 +95,7 @@ st.markdown("""
         /* TŁO KREMOWE CAŁOŚCI */
         .stApp { 
             background-color: #FDF5E6; 
-            color: #1A1A1A; /* Bardzo ciemny grafit zamiast czarnego */
+            color: #f56cb3; /* Bardzo ciemny grafit zamiast czarnego */
         }
 
         /* GŁÓWNY KONTENER */
@@ -117,13 +117,13 @@ st.markdown("""
         .stTextInput div,
         .stTextArea div {
             background-color: #ffffff !important;
-            color: #1A1A1A !important;
+            color: #f56cb3 !important;
         }
 
         /* Wymuszenie grafitowego tekstu wewnątrz inputów */
         input, textarea, select, span {
-            color: #1A1A1A !important;
-            -webkit-text-fill-color: #1A1A1A !important;
+            color: #f56cb3 !important;
+            -webkit-text-fill-color: #f56cb3 !important;
         }
 
         /* SPOLSZCZENIE UPLOADERA */
@@ -162,7 +162,7 @@ st.markdown("""
         }
         
         /* Kolor etykiet pól */
-        label { color: #1A1A1A !important; font-weight: bold !important; }
+        label { color: #f56cb3 !important; font-weight: bold !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -472,6 +472,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
