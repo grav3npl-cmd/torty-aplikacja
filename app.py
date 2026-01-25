@@ -92,65 +92,54 @@ st.markdown("""
     <style>
         #MainMenu, footer, header {visibility: hidden;}
         
-        /* 1. TŁO GŁÓWNE APLIKACJI */
+        /* 1. TŁO GŁÓWNE */
         .stApp { 
             background-color: #FDF5E6 !important; 
         }
 
-        /* 2. BRUTALNE WYMUSZENIE BIAŁEGO TŁA DLA KAŻDEGO POLA */
-        /* Ten selektor uderza we wszystko co jest polem edycji w Streamlit */
-        div[data-baseweb="input"], 
-        div[data-baseweb="textarea"], 
-        div[data-baseweb="select"], 
-        div[data-testid="stFileUploader"],
-        div[data-testid="stForm"],
-        input, 
-        textarea, 
-        select,
-        section[data-testid="stFileUploaderDropzone"] {
+        /* 2. EKSTREMALNE WYMUSZENIE BIAŁEGO TŁA DLA POL FORMULARZA */
+        /* Uderzamy we wszystko co jest wewnątrz selectboxa, number inputa i text inputa */
+        div[data-testid="stForm"] *, 
+        div[data-baseweb="select"] *, 
+        div[data-baseweb="input"] *,
+        div[data-testid="stNumberInput"] *,
+        div[data-testid="stTextInput"] *,
+        div[data-testid="stTextArea"] *,
+        div[data-testid="stDateInput"] * {
             background-color: #ffffff !important;
-            background: #ffffff !important;
-            border: 1px solid #f56cb3 !important;
-            border-radius: 8px !important;
             color: #1A1A1A !important;
         }
 
-        /* 3. NAPRAWA TEKSTU (Muszą być czarne litery na białym tle) */
-        input, textarea, select, span, p, label, div {
+        /* Przywrócenie różowej ramki dla głównych kontenerów pól */
+        div[data-baseweb="input"], 
+        div[data-baseweb="select"],
+        div[data-testid="stFileUploader"] section {
+            border: 2px solid #f56cb3 !important;
+            border-radius: 10px !important;
+            background-color: #ffffff !important;
+        }
+
+        /* 3. NAPRAWA TEKSTU I IKON */
+        input, textarea, select, span, label, p, svg {
             color: #1A1A1A !important;
+            fill: #1A1A1A !important; /* Dla ikon strzałek w selectboxie */
             -webkit-text-fill-color: #1A1A1A !important;
         }
 
-        /* Specjalna poprawka dla datownika i uploaderów zdjęć */
-        .stDateInput div, .stFileUploader section {
-            background-color: #ffffff !important;
-        }
-
-        /* 4. SPOLSZCZENIE I STYL UPLOADERA */
+        /* 4. SPOLSZCZENIE UPLOADERA (Naprawa komunikatu pod przyciskiem) */
         div[data-testid="stFileUploader"] section div::before { 
             content: "Przeciągnij zdjęcia tutaj"; 
             color: #1A1A1A !important; 
-            font-weight: bold; 
-            font-size: 16px;
+            font-weight: bold;
         }
         div[data-testid="stFileUploader"] section div { font-size: 0px !important; }
         div[data-testid="stFileUploader"] section button span::after { 
-            content: "Wybierz z dysku"; 
+            content: "Wybierz zdjęcia"; 
             font-size: 14px; 
         }
         div[data-testid="stFileUploader"] section button span { font-size: 0px !important; }
 
-        /* 5. KAFELKI ZLECEŃ */
-        .order-card {
-            background-color: #ffffff !important;
-            border: 2px solid #f56cb3 !important;
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 5px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        /* 6. PRZYCISKI MENU I FORMULARZA */
+        /* 5. PRZYCISKI (Wyróżnienie na tle białych pól) */
         .stButton > button, div.stFormSubmitButton > button { 
             background-color: #ffffff !important; 
             color: #ff0aef !important; 
@@ -158,16 +147,19 @@ st.markdown("""
             border-radius: 10px !important; 
             font-weight: bold !important;
             width: 100%;
-            transition: 0.3s ease;
         }
         .stButton > button:hover, div.stFormSubmitButton > button:hover { 
             background-color: #ff0aef !important; 
             color: white !important; 
         }
 
-        .header-title {
-            font-size: 1.6rem; font-weight: 900; color: #ff0aef;
-            text-align: center; text-transform: uppercase; letter-spacing: 2px;
+        /* 6. KAFELKI ZLECEŃ */
+        .order-card {
+            background-color: #ffffff !important;
+            border: 2px solid #f56cb3 !important;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 5px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -476,6 +468,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
