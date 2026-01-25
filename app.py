@@ -210,6 +210,7 @@ st.markdown("""
 
 # Załadowanie danych
 data = load_data()
+st.session_state['data'] = data
 
 if 'temp_skladniki' not in st.session_state: st.session_state['temp_skladniki'] = {}
 if 'show_add_order' not in st.session_state: st.session_state['show_add_order'] = False
@@ -218,6 +219,8 @@ if 'edit_order_index' not in st.session_state: st.session_state['edit_order_inde
 if 'edit_recipe_index' not in st.session_state: st.session_state['edit_recipe_index'] = None
 if 'success_msg' not in st.session_state: st.session_state['success_msg'] = None
 if 'edit_ing_key' not in st.session_state: st.session_state['edit_ing_key'] = None
+
+
 
 #/////////////////////////// 4. Górne Menu ///////////////////////////
 # Centrowanie i wyświetlanie logo (bez napisu pod spodem)
@@ -581,6 +584,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
