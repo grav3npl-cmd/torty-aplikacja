@@ -98,29 +98,33 @@ st.markdown("""
             color: #4A4A4A; 
         }
 
-        /* SKALOWANIE DLA WSZYSTKICH URZĄDZEŃ (RWD) */
-        html {
-            font-size: 16px; /* Baza dla skalowania */
-        }
-        
-        @media (max-width: 600px) {
-            html { font-size: 14px; } /* Mniejsza czcionka na telefonach */
+        /* GŁÓWNY KONTENER Z MARGINESAMI (Responsywne skalowanie) */
+        /* Na dużych ekranach ogranicza szerokość do 1100px i centruje */
+        [data-testid="stMainViewContainer"] > section > div {
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 5% !important;
+            padding-right: 5% !important;
         }
 
-        /* WYMUSZENIE UKŁADU KOLUMN (Żeby na telefonie nie spadały pod siebie) */
+        /* Na telefonach (ekran < 600px) marginesy się zmniejszają do minimum */
+        @media (max-width: 600px) {
+            [data-testid="stMainViewContainer"] > section > div {
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+            }
+            html { font-size: 14px; }
+        }
+
+        /* WYMUSZENIE UKŁADU KOLUMN W MENU (Pasek boczny) */
         [data-testid="column"] {
             width: auto !important;
             flex: 1 1 auto !important;
             min-width: 0 !important;
         }
-
-        /* Kontener na całą zawartość z max-szerokością dla laptopów */
-        .main-content {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
         
-        /* Zdjęcia w kafelkach - responsywna wysokość */
+        /* Zdjęcia w kafelkach */
         .element-container img {
             height: 180px !important;
             object-fit: cover;
@@ -128,7 +132,7 @@ st.markdown("""
             border-radius: 8px;
         }
 
-        /* Przyciski Menu - responsywne i neonowe */
+        /* Przyciski Menu - Neonowy róż */
         .stButton > button { 
             background-color: #ffffff !important; 
             color: #ff0aef !important; 
@@ -169,7 +173,6 @@ st.markdown("""
             letter-spacing: 2px;
         }
 
-        /* Napisy pomocnicze */
         .stMarkdown, p, span {
             color: #4A4A4A !important;
         }
@@ -585,6 +588,7 @@ elif menu == "Galeria":
                         del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
 
 
 
