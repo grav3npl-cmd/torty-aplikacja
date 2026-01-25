@@ -213,7 +213,9 @@ st.write("---")
 if menu == "Kalendarz":
     st.caption("PLANER ZAMÓWIEŃ")
     
-    # Przycisk dodawania widoczny tylko gdy nie dodajemy/edytujemy
+    # Odświeżenie danych
+    data = load_data()
+    
     if not st.session_state['show_add_order'] and st.session_state['edit_order_index'] is None:
         if st.button("➕ NOWE ZLECENIE", use_container_width=True):
             st.session_state['show_add_order'] = True
@@ -234,9 +236,18 @@ if menu == "Kalendarz":
                 klient = st.text_input("Klient", value=domyslne.get('klient', ''))
                 
                 c1, c2 = st.columns(2)
-                # Pobieramy najświeższe przepisy z bazy
                 lista_przepisow = ["Własna kompozycja"] + [p["nazwa"] for p in data["przepisy"]]
-                wybrany_tort = c1.selectbox("Wybierz przepis", options=lista_przepisow)
+                
+                # POPRAWKA: Wyciąganie nazwy tortu z zapisanego opisu do edycji
+                stary_opis_pelny = domyslne.get('opis', '')
+                obecny_tort = "Własna kompozycja"
+                if "[TORT:" in stary_opis_pelny:
+                    obecny_tort = stary_opis_pelny.split("[TORT:")[1].split("]")[0].strip()
+                
+                # Ustawienie indeksu dla selectboxa, żeby nie wracał do "Własna kompozycja"
+                idx_start = lista_przepisow.index(obecny_tort) if obecny_tort in lista_przepisow else 0
+                
+                wybrany_tort = c1.selectbox("Wybierz przepis", options=lista_przepisow, index=idx_start)
                 srednica_zam = c2.number_input("Średnica Fi (cm)", value=20)
 
                 # Obliczanie ceny sugerowanej
@@ -247,14 +258,15 @@ if menu == "Kalendarz":
                         cena_sugerowana = oblicz_cene_tortu(przepis_obj, data["skladniki"], srednica_zam)
 
                 stara_cena = 0.0
-                if is_edit_mode and "[CENA:" in domyslne.get('opis', ''):
-                    try: stara_cena = float(domyslne['opis'].split("[CENA:")[1].split("]")[0].replace("zł", "").strip())
+                if is_edit_mode and "[CENA:" in stary_opis_pelny:
+                    try: stara_cena = float(stary_opis_pelny.split("[CENA:")[1].split("]")[0].replace("zł", "").strip())
                     except: stara_cena = 0.0
 
                 cena_finalna = st.number_input("Cena ostateczna (zł)", 
                                                value=stara_cena if is_edit_mode else float(cena_sugerowana))
 
-                opis_czysty = domyslne.get('opis', '').split('[CENA:')[0].strip() if is_edit_mode else ""
+                # Wyciąganie czystego opisu (bez tagów ceny i tortu)
+                opis_czysty = stary_opis_pelny.split('[TORT:')[0].strip() if is_edit_mode else ""
                 opis_dodatkowy = st.text_area("Uwagi", value=opis_czysty)
                 uploaded_order_imgs = st.file_uploader("Dodaj zdjęcia", type=['jpg','png'], accept_multiple_files=True)
 
@@ -271,9 +283,10 @@ if menu == "Kalendarz":
                     nowe_fotki = save_uploaded_files(uploaded_order_imgs)
                     stare_fotki = domyslne.get('zdjecia', []) if is_edit_mode else []
                     
+                    # Zapisujemy RODZAJ TORTU i CENĘ w opisie
                     wpis = {
                         "data": str(data_zamowienia), "klient": klient, 
-                        "opis": f"{opis_dodatkowy} [CENA: {cena_finalna:.2f} zł]", 
+                        "opis": f"{opis_dodatkowy} [TORT: {wybrany_tort}] [CENA: {cena_finalna:.2f} zł]", 
                         "wykonane": domyslne.get('wykonane', False) if is_edit_mode else False,
                         "zdjecia": stare_fotki + nowe_fotki
                     }
@@ -293,14 +306,19 @@ if menu == "Kalendarz":
         st.info("Brak zaplanowanych zleceń.")
     else:
         for i, wpis in enumerate(data["kalendarz"]):
-            cena_val = wpis['opis'].split("[CENA:")[1].split("]")[0].strip() if "[CENA:" in wpis['opis'] else "0.00 zł"
+            # Wyciąganie ceny i rodzaju tortu do wyświetlenia
+            opis_pelny = wpis.get('opis', '')
+            cena_val = opis_pelny.split("[CENA:")[1].split("]")[0].strip() if "[CENA:" in opis_pelny else "0.00 zł"
+            tort_val = opis_pelny.split("[TORT:")[1].split("]")[0].strip() if "[TORT:" in opis_pelny else "Własna kompozycja"
+            czysty_opis_wyswietl = opis_pelny.split('[TORT:')[0].strip()
             
             st.markdown(f"""
                 <div class="order-card">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                         <div>
                             <span style="font-size: 1.1rem;">📅 <b>{wpis['data']}</b></span><br>
-                            <span style="font-size: 1.3rem;">👤 <b>{wpis['klient']}</b></span>
+                            <span style="font-size: 1.3rem;">👤 <b>{wpis['klient']}</b></span><br>
+                            <span style="font-size: 1.0rem; color: #ff0aef;">🎂 {tort_val}</span>
                         </div>
                         <div style="text-align: right;">
                             <span style="color: {'#00ff00' if wpis.get('wykonane') else '#f56cb3'}; font-weight: bold;">
@@ -313,7 +331,7 @@ if menu == "Kalendarz":
             """, unsafe_allow_html=True)
             
             with st.expander("Opcje i szczegóły"):
-                st.write(f"**Uwagi:** {wpis['opis'].split('[CENA:')[0]}")
+                st.write(f"**Uwagi:** {czysty_opis_wyswietl}")
                 if wpis.get('zdjecia'):
                     c_img = st.columns(4)
                     for j, img in enumerate(wpis['zdjecia']):
@@ -609,6 +627,7 @@ elif menu == "Galeria":
                         del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
 
 
 
