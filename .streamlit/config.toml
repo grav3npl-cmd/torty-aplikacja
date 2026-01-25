@@ -6,7 +6,7 @@ primaryColor = "#ff0aef"
 backgroundColor = "#FDF5E6"
 
 # Tło bocznych paneli i formularzy (lekko ciemniejszy krem lub biały)
-secondaryBackgroundColor = "#ffffff"
+secondaryBackgroundColor = "#FDF5E6"
 
 # Kolor tekstu (wymuszamy Twój grafitowy/czarny)
 textColor = "#1A1A1A"
