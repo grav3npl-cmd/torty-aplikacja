@@ -98,64 +98,130 @@ st.markdown("""
             color: #000000; 
         }
 
-        /* GŁÓWNY KONTENER */
+        /* GŁÓWNY KONTENER Z MARGINESAMI */
         [data-testid="stMainViewContainer"] > section > div {
             max-width: 1100px;
-            margin: 0 auto;
-            padding: 5% !important;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 5% !important;
+            padding-right: 5% !important;
         }
 
         @media (max-width: 600px) {
-            [data-testid="stMainViewContainer"] > section > div { padding: 10px !important; }
+            [data-testid="stMainViewContainer"] > section > div {
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+            }
+            html { font-size: 14px; }
         }
 
-        /* NAPRAWA KOLORÓW W POLACH (Select, Upload, Input) */
-        div[data-baseweb="select"], div[data-testid="stFileUploader"], div[data-baseweb="input"], div[data-baseweb="textarea"] {
-            background-color: #ffffff !important;
-            border-radius: 8px !important;
+        /* WYMUSZENIE UKŁADU KOLUMN W MENU */
+        [data-testid="column"] {
+            width: auto !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
         }
         
-        /* Tekst w selectbox i polach */
-        span[data-baseweb="select"], input, textarea, label, p {
+        /* KOMPLEKSOWE CZYSZCZENIE KOLORÓW WIDGETÓW (BIAŁE TŁO DLA WSZYSTKIEGO) */
+        /* Naprawa dla: Input, Textarea, Select, FileUploader, Date, Number */
+        div[data-baseweb="input"], 
+        div[data-baseweb="textarea"], 
+        div[data-baseweb="select"], 
+        div[role="combobox"],
+        div[data-testid="stFileUploader"],
+        .stNumberInput div,
+        .stDateInput div {
+            background-color: #ffffff !important;
+            border-radius: 8px !important;
+            color: #000000 !important;
+        }
+
+        /* Wymuszenie koloru tekstu i wypełnienia dla przeglądarek */
+        input, textarea, select, span[data-baseweb="select"], .stMarkdown p {
+            background-color: #ffffff !important;
             color: #000000 !important;
             -webkit-text-fill-color: #000000 !important;
         }
 
-        /* KAFELKI ZLECEŃ - TWOJA RAMKA #f56cb3 */
+        /* Styl dla labeli (napisów nad polami) */
+        label {
+            color: #000000 !important;
+            font-weight: bold !important;
+        }
+
+        /* KAFELKI ZLECEŃ Z TWOJĄ RAMKĄ #f56cb3 */
         .order-card {
             background-color: #ffffff;
             border: 2px solid #f56cb3 !important;
             border-radius: 15px;
             padding: 15px;
-            margin-bottom: 15px;
+            margin-bottom: 5px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            color: #000000;
         }
 
-        /* PRZYCISKI */
+        /* Styl dla expanderów */
+        .stExpander {
+            background-color: #ffffff !important;
+            border: 1px solid #E0E0E0 !important;
+            border-radius: 12px !important;
+        }
+
+        /* Przycisk Form Submit */
+        div.stFormSubmitButton > button {
+            background-color: #ff0aef !important;
+            color: white !important;
+            width: 100% !important;
+            border: none !important;
+            font-weight: bold;
+        }
+
+        /* Przyciski Menu - Neonowy róż */
         .stButton > button { 
             background-color: #ffffff !important; 
             color: #ff0aef !important; 
             border: 2px solid #ff0aef !important; 
             border-radius: 10px; 
             font-weight: bold;
+            padding: 0.4rem 0.2rem !important;
+            font-size: 0.8rem !important;
             width: 100%;
-            transition: 0.3s;
+            white-space: nowrap;
+            transition: 0.3s ease;
         }
+
         .stButton > button:hover { 
             background-color: #ff0aef !important; 
             color: white !important; 
+            box-shadow: 0 0 15px rgba(255, 10, 239, 0.6);
         }
 
         /* Header Tytuł */
         .header-title {
-            font-size: 1.6rem; font-weight: 900; color: #ff0aef;
-            text-align: center; margin-bottom: 10px;
-            text-transform: uppercase; letter-spacing: 2px;
+            font-size: 1.6rem; 
+            font-weight: 900; 
+            color: #ff0aef;
+            text-align: center; 
+            margin-bottom: 10px;
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+        }
+
+        /* Wszystkie teksty czarne */
+        .stMarkdown, p, span, li, div {
+            color: #000000;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# ... (reszta inicjalizacji session_state bez zmian) ...
+if 'temp_skladniki' not in st.session_state: st.session_state['temp_skladniki'] = {}
+if 'show_add_order' not in st.session_state: st.session_state['show_add_order'] = False
+if 'fullscreen_recipe' not in st.session_state: st.session_state['fullscreen_recipe'] = None
+if 'edit_order_index' not in st.session_state: st.session_state['edit_order_index'] = None
+if 'edit_recipe_index' not in st.session_state: st.session_state['edit_recipe_index'] = None
+if 'success_msg' not in st.session_state: st.session_state['success_msg'] = None
+if 'edit_ing_key' not in st.session_state: st.session_state['edit_ing_key'] = None
+
 data = load_data()
 
 #/////////////////////////// 4. Górne Menu ///////////////////////////
@@ -575,6 +641,7 @@ elif menu == "Galeria":
                         del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
 
 
 
