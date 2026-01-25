@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import date
 
 DB_FILE = 'baza_cukierni_v14.json'
-IMG_FOLDER = 'zdjecia_tortow'245, 108, 179
+IMG_FOLDER = 'zdjecia_tortow'245, 108, 179,
 DEFAULT_IMG = 'default_cake.png'
 
 os.makedirs(IMG_FOLDER, exist_ok=True)
@@ -472,6 +472,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
