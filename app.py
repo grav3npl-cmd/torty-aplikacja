@@ -225,31 +225,29 @@ if 'edit_ing_key' not in st.session_state: st.session_state['edit_ing_key'] = No
 data = load_data()
 
 #/////////////////////////// 4. Górne Menu ///////////////////////////
-# Centrowanie i wyświetlanie logo z poprawionym skalowaniem
+# Centrowanie i wyświetlanie logo
 LOGO_PATH = "wktorty_logo.png"
 if os.path.exists(LOGO_PATH):
-    # Używamy kolumn, ale blokujemy ich rozjeżdżanie się
-    c1, c2, c3 = st.columns([1, 0.8, 1])
+    c1, c2, c3 = st.columns([1, 0.6, 1])
     with c2:
         st.image(LOGO_PATH, use_container_width=True)
 
 st.markdown('<div class="header-title">WK TORTY</div>', unsafe_allow_html=True)
 
-# Główne przyciski menu - teraz 5 kolumn będzie zawsze obok siebie, nawet na małym ekranie
 menu_cols = st.columns(5)
 with menu_cols[0]: 
-    if st.button("📅 Plan"): st.session_state['menu'] = "Kalendarz"
+    if st.button("📅 Kalendarz"): st.session_state['menu'] = "Kalendarz"
 with menu_cols[1]: 
     if st.button("📖 Przepisy"): 
         st.session_state['menu'] = "Przepisy"
         st.session_state['fullscreen_recipe'] = None
         st.session_state['edit_recipe_index'] = None
 with menu_cols[2]: 
-    if st.button("➕ Nowy"): st.session_state['menu'] = "Dodaj"
+    if st.button("➕ Dodaj"): st.session_state['menu'] = "Dodaj"
 with menu_cols[3]: 
-    if st.button("📦 Stan"): st.session_state['menu'] = "Magazyn"
+    if st.button("📦 Magazyn"): st.session_state['menu'] = "Magazyn"
 with menu_cols[4]: 
-    if st.button("🖼️ Foto"): st.session_state['menu'] = "Galeria"
+    if st.button("🖼️ Galeria"): st.session_state['menu'] = "Galeria"
 
 if 'menu' not in st.session_state: st.session_state['menu'] = "Kalendarz"
 menu = st.session_state['menu']
@@ -260,7 +258,6 @@ st.write("---")
 if menu == "Kalendarz":
     st.caption("PLANER ZAMÓWIEŃ")
     
-    # Przycisk dodawania
     if not st.session_state['show_add_order'] and st.session_state['edit_order_index'] is None:
         if st.button("➕ NOWE ZLECENIE", use_container_width=True):
             st.session_state['show_add_order'] = True
@@ -269,10 +266,9 @@ if menu == "Kalendarz":
     idx_edit = st.session_state['edit_order_index']
     is_edit_mode = idx_edit is not None
     
-    # FORMULARZ (Dodawanie/Edycja)
     if st.session_state['show_add_order'] or is_edit_mode:
         with st.container(border=True):
-            st.subheader("📝 " + ("Edytuj zlecenie" if is_edit_mode else "Nowe zlecenie"))
+            st.subheader("📝 " + ("Edytuj" if is_edit_mode else "Nowe zlecenie"))
             domyslne = data["kalendarz"][idx_edit] if is_edit_mode else {}
             
             with st.form("kalendarz_form"):
@@ -282,22 +278,36 @@ if menu == "Kalendarz":
                 
                 c1, c2 = st.columns(2)
                 lista_nazw = ["Własna kompozycja"] + [p["nazwa"] for p in data["przepisy"]]
-                wybrany_tort = c1.selectbox("Rodzaj tortu", lista_nazw)
+                wybrany_tort = c1.selectbox("Wybierz przepis", lista_nazw)
                 srednica_zam = c2.number_input("Średnica Fi (cm)", value=20)
 
-                # Wyciąganie opisu i ceny do edycji
-                stary_opis_pelny = domyslne.get('opis', '')
-                opis_czysty = stary_opis_pelny.split('[CENA:')[0].strip() if '[CENA:' in stary_opis_pelny else stary_opis_pelny
-                
-                opis_dodatkowy = st.text_area("Uwagi", value=opis_czysty)
-                cena_manualna = st.number_input("Cena zlecenia (zł)", value=0.0, step=0.01)
-                uploaded_order_imgs = st.file_uploader("Inspiracje / Zdjęcia", type=['jpg','png'], accept_multiple_files=True)
+                # LOGIKA CENY:
+                cena_sugerowana = 0.0
+                if wybrany_tort != "Własna kompozycja":
+                    przepis_obj = next((p for p in data["przepisy"] if p["nazwa"] == wybrany_tort), None)
+                    if przepis_obj:
+                        # Korzystamy z funkcji oblicz_cene_tortu którą masz w kodzie
+                        cena_sugerowana = oblicz_cene_tortu(przepis_obj, data["skladniki"], srednica_zam)
 
-                col_btn1, col_btn2 = st.columns(2)
-                with col_btn1:
-                    save_btn = st.form_submit_button("ZAPISZ")
-                with col_btn2:
-                    cancel_btn = st.form_submit_button("ANULUJ")
+                # Jeśli edytujemy, wyciągamy starą cenę
+                stara_cena = 0.0
+                if is_edit_mode and "[CENA:" in domyslne.get('opis', ''):
+                    try:
+                        stara_cena = float(domyslne['opis'].split("[CENA:")[1].split("]")[0].replace("zł", "").strip())
+                    except: stara_cena = 0.0
+
+                cena_finalna = st.number_input("Cena ostateczna (zł)", 
+                                               value=stara_cena if is_edit_mode else float(cena_sugerowana), 
+                                               step=5.0,
+                                               help="System podpowiedział cenę z przepisu. Możesz ją teraz dowolnie zmienić.")
+
+                opis_czysty = domyslne.get('opis', '').split('[CENA:')[0].strip() if is_edit_mode else ""
+                opis_dodatkowy = st.text_area("Uwagi", value=opis_czysty)
+                uploaded_order_imgs = st.file_uploader("Inspiracje", type=['jpg','png'], accept_multiple_files=True)
+
+                b_col1, b_col2 = st.columns(2)
+                with b_col1: save_btn = st.form_submit_button("ZAPISZ")
+                with b_col2: cancel_btn = st.form_submit_button("ANULUJ")
 
                 if cancel_btn:
                     st.session_state['show_add_order'] = False
@@ -308,36 +318,29 @@ if menu == "Kalendarz":
                     nowe_fotki = save_uploaded_files(uploaded_order_imgs)
                     stare_fotki = domyslne.get('zdjecia', []) if is_edit_mode else []
                     
-                    # Zapisujemy cenę w opisie w specjalnym formacie do łatwego wyciągnięcia
-                    finalny_opis = f"{opis_dodatkowy} [CENA: {cena_manualna:.2f} zł]"
-                    
                     wpis = {
                         "data": str(data_zamowienia), "klient": klient, 
-                        "opis": finalny_opis, 
+                        "opis": f"{opis_dodatkowy} [CENA: {cena_finalna:.2f} zł]", 
                         "wykonane": domyslne.get('wykonane', False) if is_edit_mode else False,
                         "zdjecia": stare_fotki + nowe_fotki
                     }
-                    if is_edit_mode:
-                        data["kalendarz"][idx_edit] = wpis
-                        st.session_state['edit_order_index'] = None
-                    else:
-                        data["kalendarz"].append(wpis)
-                        st.session_state['show_add_order'] = False
+                    if is_edit_mode: data["kalendarz"][idx_edit] = wpis
+                    else: data["kalendarz"].append(wpis)
+                    
                     data["kalendarz"] = sorted(data["kalendarz"], key=lambda x: x['data'])
                     save_data(data)
+                    st.session_state['show_add_order'] = False
+                    st.session_state['edit_order_index'] = None
                     st.rerun()
 
     st.write("---")
 
-    # LISTA ZLECEŃ
+    # WYŚWIETLANIE LISTY (Kafelki z ramką #f56cb3)
     if not data["kalendarz"]:
-        st.info("Brak zleceń.")
+        st.info("Brak zaplanowanych tortów.")
     else:
         for i, wpis in enumerate(data["kalendarz"]):
-            # Wyciąganie ceny z opisu
-            cena_str = ""
-            if "[CENA:" in wpis.get('opis', ''):
-                cena_str = wpis['opis'].split("[CENA:")[1].split("]")[0].strip()
+            cena_val = wpis['opis'].split("[CENA:")[1].split("]")[0].strip() if "[CENA:" in wpis['opis'] else "0.00 zł"
             
             st.markdown(f"""
                 <div class="order-card">
@@ -347,46 +350,33 @@ if menu == "Kalendarz":
                             <span style="font-size: 1.3rem;">👤 <b>{wpis['klient']}</b></span>
                         </div>
                         <div style="text-align: right;">
-                            <span style="color: {'#00ff00' if wpis.get('wykonane') else '#f56cb3'}; font-weight: bold; font-size: 1rem;">
+                            <span style="color: {'#00ff00' if wpis.get('wykonane') else '#f56cb3'}; font-weight: bold;">
                                 {'✅ GOTOWE' if wpis.get('wykonane') else '⏳ W REALIZACJI'}
                             </span><br>
-                            <span style="color: #00ff00; font-weight: bold; font-size: 1.2rem;">
-                                {cena_str}
-                            </span>
+                            <span style="color: #00ff00; font-weight: bold; font-size: 1.2rem;">{cena_val}</span>
                         </div>
                     </div>
                 </div>
             """, unsafe_allow_html=True)
             
-            with st.expander("Zarządzaj zleceniem"):
-                # Wyświetlamy czysty opis bez tagu ceny
-                wyswietlany_opis = wpis.get('opis', '').split('[CENA:')[0]
-                st.write(f"**Uwagi:** {wyswietlany_opis}")
-                
+            with st.expander("Opcje i szczegóły"):
+                st.write(f"**Uwagi:** {wpis['opis'].split('[CENA:')[0]}")
                 if wpis.get('zdjecia'):
-                    cols_img = st.columns(4)
-                    for j, img_path in enumerate(wpis['zdjecia']):
-                        if os.path.exists(img_path):
-                            with cols_img[j % 4]: st.image(img_path)
+                    c_img = st.columns(4)
+                    for j, img in enumerate(wpis['zdjecia']):
+                        if os.path.exists(img):
+                            with c_img[j%4]: st.image(img)
                 
-                # Przyciski rozciągnięte (gap_small lub brak kolumn z dużymi odstępami)
-                # Używamy st.columns z małym odstępem
-                c_a, c_b, c_c = st.columns([1, 1, 1], gap="small")
+                c_a, c_b, c_c = st.columns(3, gap="small")
+                btn_txt = "Nadal w realizacji" if wpis.get('wykonane') else "Zakończ zlecenie"
                 
-                # Dynamiczna nazwa przycisku statusu
-                txt_status = "Nadal w realizacji" if wpis.get('wykonane') else "Zakończ zlecenie"
-                
-                if c_a.button(txt_status, key=f"stat_{i}", use_container_width=True):
+                if c_a.button(btn_txt, key=f"s_{i}", use_container_width=True):
                     data["kalendarz"][i]["wykonane"] = not data["kalendarz"][i]["wykonane"]
-                    save_data(data)
-                    st.rerun()
-                if c_b.button("Edytuj", key=f"edit_{i}", use_container_width=True):
-                    st.session_state['edit_order_index'] = i
-                    st.rerun()
-                if c_c.button("Usuń", key=f"del_{i}", use_container_width=True):
-                    data["kalendarz"].pop(i)
-                    save_data(data)
-                    st.rerun()
+                    save_data(data); st.rerun()
+                if c_b.button("Edytuj", key=f"e_{i}", use_container_width=True):
+                    st.session_state['edit_order_index'] = i; st.rerun()
+                if c_c.button("Usuń", key=f"d_{i}", use_container_width=True):
+                    data["kalendarz"].pop(i); save_data(data); st.rerun()
 
 #//--- 5.2. MAGAZYN ---//
 elif menu == "Magazyn":
@@ -666,6 +656,7 @@ elif menu == "Galeria":
                         del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
 
 
 
