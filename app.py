@@ -97,7 +97,7 @@ st.markdown("""
             background-color: #FDF5E6 !important; 
         }
 
-        /* 2. BLOKADA CIEMNEGO MOTYWU I CZARNYCH RAMEK */
+        /* 2. BLOKADA CIEMNEGO MOTYWU DLA POL FORMULARZA */
         div[data-testid="stForm"] *, 
         div[data-baseweb="select"] *, 
         div[data-baseweb="input"] *,
@@ -114,8 +114,7 @@ st.markdown("""
             border-color: #f56cb3 !important;
         }
 
-        /* 3. NAPRAWA PRZYCISKÓW (ZAPISZ / ANULUJ / MENU) */
-        /* Celujemy w sam przycisk i wszystkie jego wewnętrzne divy/spany */
+        /* 3. NAPRAWA PRZYCISKÓW */
         button[kind="secondaryFormSubmit"], button[kind="secondary"], .stButton > button {
             background-color: #ffffff !important;
             color: #ff0aef !important;
@@ -123,23 +122,19 @@ st.markdown("""
             border-radius: 10px !important;
             font-weight: bold !important;
             width: 100% !important;
-            height: auto !important;
             padding: 10px !important;
             transition: all 0.3s ease-in-out !important;
         }
 
-        /* Usunięcie białych ramek/tła wokół tekstu wewnątrz przycisku */
         button[kind="secondaryFormSubmit"] *, button[kind="secondary"] *, .stButton > button * {
             background-color: transparent !important;
             color: inherit !important;
             -webkit-text-fill-color: inherit !important;
         }
 
-        /* HOVER - Cały przycisk na różowo, tekst na biało */
         button[kind="secondaryFormSubmit"]:hover, button[kind="secondary"]:hover, .stButton > button:hover {
             background-color: #ff0aef !important;
             color: #ffffff !important;
-            border-color: #ff0aef !important;
         }
 
         button[kind="secondaryFormSubmit"]:hover *, button[kind="secondary"]:hover *, .stButton > button:hover * {
@@ -147,20 +142,35 @@ st.markdown("""
             -webkit-text-fill-color: #ffffff !important;
         }
 
-        /* 4. RAMKI PÓL WEJŚCIOWYCH */
-        div[data-baseweb="input"], 
-        div[data-baseweb="select"],
-        div[data-testid="stFileUploader"] section {
-            border: 2px solid #f56cb3 !important;
-            border-radius: 10px !important;
+        /* 4. KAFELKI (order-card) - NAPRAWA BIAŁEJ CZCIONKI */
+        .order-card {
             background-color: #ffffff !important;
+            border: 2px solid #f56cb3 !important;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 5px;
         }
 
-        /* 5. TEKST I IKONY */
-        input, textarea, select, span, label, p, svg {
+        /* Wymuszenie koloru dla tekstu wewnątrz kafelków */
+        .order-card b, 
+        .order-card small, 
+        .order-card span, 
+        .order-card div {
             color: #1A1A1A !important;
-            fill: #1A1A1A !important;
             -webkit-text-fill-color: #1A1A1A !important;
+        }
+
+        /* Wyjątek dla zielonej ceny w kafelku - żeby nie stała się czarna */
+        .order-card div[style*="color: rgb(0, 255, 0)"], 
+        .order-card div[style*="color: #00ff00"],
+        .order-card span[style*="color: #00ff00"] {
+            color: #00ff00 !important;
+            -webkit-text-fill-color: #00ff00 !important;
+        }
+
+        /* 5. TEKST I ETYKIETY */
+        label, p, .stMarkdown {
+            color: #1A1A1A !important;
         }
 
         /* 6. SPOLSZCZENIE UPLOADERA */
@@ -173,15 +183,6 @@ st.markdown("""
             content: "Wybierz zdjęcia"; font-size: 14px; 
         }
         div[data-testid="stFileUploader"] section button span { font-size: 0px !important; }
-
-        /* 7. KAFELKI ZLECEŃ */
-        .order-card {
-            background-color: #ffffff !important;
-            border: 2px solid #f56cb3 !important;
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 5px;
-        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -491,6 +492,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
