@@ -98,7 +98,7 @@ st.markdown("""
             color: #000000; 
         }
 
-        /* GŁÓWNY KONTENER Z MARGINESAMI */
+        /* GŁÓWNY KONTENER */
         [data-testid="stMainViewContainer"] > section > div {
             max-width: 1100px;
             margin-left: auto;
@@ -107,49 +107,42 @@ st.markdown("""
             padding-right: 5% !important;
         }
 
-        @media (max-width: 600px) {
-            [data-testid="stMainViewContainer"] > section > div {
-                padding-left: 10px !important;
-                padding-right: 10px !important;
-            }
-            html { font-size: 14px; }
-        }
-
-        /* WYMUSZENIE UKŁADU KOLUMN W MENU */
-        [data-testid="column"] {
-            width: auto !important;
-            flex: 1 1 auto !important;
-            min-width: 0 !important;
-        }
-        
-        /* KOMPLEKSOWE CZYSZCZENIE KOLORÓW WIDGETÓW (BIAŁE TŁO DLA WSZYSTKIEGO) */
-        /* Naprawa dla: Input, Textarea, Select, FileUploader, Date, Number */
-        div[data-baseweb="input"], 
-        div[data-baseweb="textarea"], 
-        div[data-baseweb="select"], 
-        div[role="combobox"],
-        div[data-testid="stFileUploader"],
-        .stNumberInput div,
-        .stDateInput div {
+        /* NAPRAWA KOLORÓW W POLACH (Select, Upload, Input) */
+        /* To wymusza białe tło i czarny tekst w listach rozwijanych i uploaderze */
+        div[data-baseweb="select"], div[data-testid="stFileUploader"], div[data-baseweb="input"], div[data-baseweb="textarea"] {
             background-color: #ffffff !important;
             border-radius: 8px !important;
-            color: #000000 !important;
         }
-
-        /* Wymuszenie koloru tekstu i wypełnienia dla przeglądarek */
-        input, textarea, select, span[data-baseweb="select"], .stMarkdown p {
-            background-color: #ffffff !important;
+        
+        /* Tekst wewnątrz pól i list wyboru */
+        span[data-baseweb="select"], input, textarea, label, p {
             color: #000000 !important;
             -webkit-text-fill-color: #000000 !important;
         }
 
-        /* Styl dla labeli (napisów nad polami) */
-        label {
-            color: #000000 !important;
-            font-weight: bold !important;
+        /* SPOLSZCZENIE FILE UPLOADERA (Tłumaczenie Drag & Drop) */
+        div[data-testid="stFileUploader"] section button span::after {
+            content: "Wybierz pliki";
+            font-size: 14px;
+        }
+        div[data-testid="stFileUploader"] section button span {
+            font-size: 0px; /* Ukrywa angielskie "Browse files" */
+        }
+        div[data-testid="stFileUploader"] section div::before {
+            content: "Przeciągnij i upuść zdjęcia tutaj";
+            color: #000000;
+            font-weight: bold;
+        }
+        div[data-testid="stFileUploader"] section div {
+            font-size: 0px; /* Ukrywa angielskie komunikaty */
+        }
+        div[data-testid="stFileUploader"] section div small {
+            font-size: 10px;
+            display: block;
+            margin-top: 5px;
         }
 
-        /* KAFELKI ZLECEŃ Z TWOJĄ RAMKĄ #f56cb3 */
+        /* KAFELKI ZLECEŃ Z RAMKĄ #f56cb3 */
         .order-card {
             background-color: #ffffff;
             border: 2px solid #f56cb3 !important;
@@ -160,23 +153,7 @@ st.markdown("""
             color: #000000;
         }
 
-        /* Styl dla expanderów */
-        .stExpander {
-            background-color: #ffffff !important;
-            border: 1px solid #E0E0E0 !important;
-            border-radius: 12px !important;
-        }
-
-        /* Przycisk Form Submit */
-        div.stFormSubmitButton > button {
-            background-color: #ff0aef !important;
-            color: white !important;
-            width: 100% !important;
-            border: none !important;
-            font-weight: bold;
-        }
-
-        /* Przyciski Menu - Neonowy róż */
+        /* PRZYCISKI MENU */
         .stButton > button { 
             background-color: #ffffff !important; 
             color: #ff0aef !important; 
@@ -186,10 +163,8 @@ st.markdown("""
             padding: 0.4rem 0.2rem !important;
             font-size: 0.8rem !important;
             width: 100%;
-            white-space: nowrap;
             transition: 0.3s ease;
         }
-
         .stButton > button:hover { 
             background-color: #ff0aef !important; 
             color: white !important; 
@@ -198,18 +173,9 @@ st.markdown("""
 
         /* Header Tytuł */
         .header-title {
-            font-size: 1.6rem; 
-            font-weight: 900; 
-            color: #ff0aef;
-            text-align: center; 
-            margin-bottom: 10px;
-            text-transform: uppercase; 
-            letter-spacing: 2px;
-        }
-
-        /* Wszystkie teksty czarne */
-        .stMarkdown, p, span, li, div {
-            color: #000000;
+            font-size: 1.6rem; font-weight: 900; color: #ff0aef;
+            text-align: center; margin-bottom: 10px;
+            text-transform: uppercase; letter-spacing: 2px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -258,6 +224,7 @@ st.write("---")
 if menu == "Kalendarz":
     st.caption("PLANER ZAMÓWIEŃ")
     
+    # Przycisk dodawania widoczny tylko gdy nie jesteśmy w trybie edycji/dodawania
     if not st.session_state['show_add_order'] and st.session_state['edit_order_index'] is None:
         if st.button("➕ NOWE ZLECENIE", use_container_width=True):
             st.session_state['show_add_order'] = True
@@ -266,6 +233,7 @@ if menu == "Kalendarz":
     idx_edit = st.session_state['edit_order_index']
     is_edit_mode = idx_edit is not None
     
+    # FORMULARZ (Dodawanie/Edycja)
     if st.session_state['show_add_order'] or is_edit_mode:
         with st.container(border=True):
             st.subheader("📝 " + ("Edytuj" if is_edit_mode else "Nowe zlecenie"))
@@ -278,18 +246,19 @@ if menu == "Kalendarz":
                 
                 c1, c2 = st.columns(2)
                 lista_nazw = ["Własna kompozycja"] + [p["nazwa"] for p in data["przepisy"]]
-                wybrany_tort = c1.selectbox("Wybierz przepis", lista_nazw)
-                srednica_zam = c2.number_input("Średnica Fi (cm)", value=20)
+                
+                # Klucze (key) wymuszają białe tło i poprawne działanie selectboxa
+                wybrany_tort = c1.selectbox("Wybierz przepis", lista_nazw, key="sb_recipe_choice")
+                srednica_zam = c2.number_input("Średnica Fi (cm)", value=20, key="ni_diameter")
 
-                # LOGIKA CENY:
+                # Logika automatycznej wyceny
                 cena_sugerowana = 0.0
                 if wybrany_tort != "Własna kompozycja":
                     przepis_obj = next((p for p in data["przepisy"] if p["nazwa"] == wybrany_tort), None)
                     if przepis_obj:
-                        # Korzystamy z funkcji oblicz_cene_tortu którą masz w kodzie
                         cena_sugerowana = oblicz_cene_tortu(przepis_obj, data["skladniki"], srednica_zam)
 
-                # Jeśli edytujemy, wyciągamy starą cenę
+                # Wyciąganie starej ceny przy edycji
                 stara_cena = 0.0
                 if is_edit_mode and "[CENA:" in domyslne.get('opis', ''):
                     try:
@@ -299,11 +268,13 @@ if menu == "Kalendarz":
                 cena_finalna = st.number_input("Cena ostateczna (zł)", 
                                                value=stara_cena if is_edit_mode else float(cena_sugerowana), 
                                                step=5.0,
-                                               help="System podpowiedział cenę z przepisu. Możesz ją teraz dowolnie zmienić.")
+                                               key="ni_final_price")
 
+                # Czysty opis bez tagu ceny
                 opis_czysty = domyslne.get('opis', '').split('[CENA:')[0].strip() if is_edit_mode else ""
-                opis_dodatkowy = st.text_area("Uwagi", value=opis_czysty)
-                uploaded_order_imgs = st.file_uploader("Inspiracje", type=['jpg','png'], accept_multiple_files=True)
+                opis_dodatkowy = st.text_area("Uwagi", value=opis_czysty, key="ta_notes")
+                
+                uploaded_order_imgs = st.file_uploader("Inspiracje", type=['jpg','png'], accept_multiple_files=True, key="fu_order_pics")
 
                 b_col1, b_col2 = st.columns(2)
                 with b_col1: save_btn = st.form_submit_button("ZAPISZ")
@@ -337,9 +308,10 @@ if menu == "Kalendarz":
 
     # WYŚWIETLANIE LISTY (Kafelki z ramką #f56cb3)
     if not data["kalendarz"]:
-        st.info("Brak zaplanowanych tortów.")
+        st.info("Brak aktywnych zleceń.")
     else:
         for i, wpis in enumerate(data["kalendarz"]):
+            # Wyciąganie ceny do wyświetlenia
             cena_val = wpis['opis'].split("[CENA:")[1].split("]")[0].strip() if "[CENA:" in wpis['opis'] else "0.00 zł"
             
             st.markdown(f"""
@@ -367,15 +339,18 @@ if menu == "Kalendarz":
                         if os.path.exists(img):
                             with c_img[j%4]: st.image(img)
                 
+                # Rozciągnięte przyciski
                 c_a, c_b, c_c = st.columns(3, gap="small")
+                
+                # Dynamiczna nazwa przycisku statusu
                 btn_txt = "Nadal w realizacji" if wpis.get('wykonane') else "Zakończ zlecenie"
                 
-                if c_a.button(btn_txt, key=f"s_{i}", use_container_width=True):
+                if c_a.button(btn_txt, key=f"btn_status_{i}", use_container_width=True):
                     data["kalendarz"][i]["wykonane"] = not data["kalendarz"][i]["wykonane"]
                     save_data(data); st.rerun()
-                if c_b.button("Edytuj", key=f"e_{i}", use_container_width=True):
+                if c_b.button("Edytuj", key=f"btn_edit_{i}", use_container_width=True):
                     st.session_state['edit_order_index'] = i; st.rerun()
-                if c_c.button("Usuń", key=f"d_{i}", use_container_width=True):
+                if c_c.button("Usuń", key=f"btn_del_{i}", use_container_width=True):
                     data["kalendarz"].pop(i); save_data(data); st.rerun()
 
 #//--- 5.2. MAGAZYN ---//
@@ -656,6 +631,7 @@ elif menu == "Galeria":
                         del data["przepisy"][item["recipe_idx"]]["zdjecia"][item["img_idx_in_recipe"]]
                         save_data(data)
                         st.rerun()
+
 
 
 
