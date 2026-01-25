@@ -131,29 +131,35 @@ st.markdown("""
     <style>
         #MainMenu, footer, header {visibility: hidden;}
         
-        /* 1. TŁO GŁÓWNE */
-        .stApp { 
+        /* 1. TŁO GŁÓWNE APLIKACJI I KONTENERÓW */
+        .stApp, [data-testid="stForm"], [data-testid="stVerticalBlock"] { 
             background-color: #FDF5E6 !important; 
         }
 
-        /* 2. BLOKADA CIEMNEGO MOTYWU DLA POL FORMULARZA */
-        div[data-testid="stForm"] *, 
-        div[data-baseweb="select"] *, 
-        div[data-baseweb="input"] *,
-        div[data-baseweb="popover"] *, 
-        div[role="listbox"] *,
-        li[role="option"],
-        li[role="option"] *,
-        div[data-testid="stNumberInput"] *,
-        div[data-testid="stTextInput"] *,
-        div[data-testid="stTextArea"] *,
-        div[data-testid="stDateInput"] * {
+        /* 2. TYLKO POLA WEJŚCIOWE MAJĄ BYĆ BIAŁE */
+        /* Celujemy precyzyjnie w tła pól, a nie w ich kontenery */
+        input, textarea, div[data-baseweb="select"] > div, 
+        div[data-baseweb="input"] > div,
+        section[data-testid="stFileUploaderDropzone"] {
             background-color: #ffffff !important;
-            color: #1A1A1A !important;
-            border-color: #f56cb3 !important;
+            background: #ffffff !important;
+            border: 2px solid #f56cb3 !important;
+            border-radius: 10px !important;
         }
 
-        /* 3. NAPRAWA PRZYCISKÓW */
+        /* Naprawa list rozwijanych (popover) */
+        div[data-baseweb="popover"] *, div[role="listbox"] * {
+            background-color: #ffffff !important;
+            color: #1A1A1A !important;
+        }
+
+        /* 3. TEKST - Zawsze ciemny grafit */
+        input, textarea, select, span, label, p, h1, h2, h3, .stMarkdown {
+            color: #1A1A1A !important;
+            -webkit-text-fill-color: #1A1A1A !important;
+        }
+
+        /* 4. PRZYCISKI - Białe z różową ramką, na hover całe różowe */
         button[kind="secondaryFormSubmit"], button[kind="secondary"], .stButton > button {
             background-color: #ffffff !important;
             color: #ff0aef !important;
@@ -161,54 +167,31 @@ st.markdown("""
             border-radius: 10px !important;
             font-weight: bold !important;
             width: 100% !important;
-            padding: 10px !important;
-            transition: all 0.3s ease-in-out !important;
+            transition: all 0.3s ease !important;
         }
 
-        button[kind="secondaryFormSubmit"] *, button[kind="secondary"] *, .stButton > button * {
-            background-color: transparent !important;
-            color: inherit !important;
-            -webkit-text-fill-color: inherit !important;
-        }
-
-        button[kind="secondaryFormSubmit"]:hover, button[kind="secondary"]:hover, .stButton > button:hover {
+        button:hover {
             background-color: #ff0aef !important;
             color: #ffffff !important;
         }
 
-        button[kind="secondaryFormSubmit"]:hover *, button[kind="secondary"]:hover *, .stButton > button:hover * {
-            color: #ffffff !important;
-            -webkit-text-fill-color: #ffffff !important;
+        /* Naprawa białych "plam" wewnątrz przycisków */
+        button * {
+            background-color: transparent !important;
+            color: inherit !important;
         }
 
-        /* 4. KAFELKI (order-card) - NAPRAWA BIAŁEJ CZCIONKI */
+        /* 5. KAFELKI (Magazyn, Kalendarz, Składniki) - Muszą pozostać białe */
         .order-card {
             background-color: #ffffff !important;
             border: 2px solid #f56cb3 !important;
             border-radius: 15px;
             padding: 15px;
             margin-bottom: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
-
-        /* Wymuszenie koloru dla tekstu wewnątrz kafelków */
-        .order-card b, 
-        .order-card small, 
-        .order-card span, 
-        .order-card div {
-            color: #1A1A1A !important;
-            -webkit-text-fill-color: #1A1A1A !important;
-        }
-
-        /* Wyjątek dla zielonej ceny w kafelku - żeby nie stała się czarna */
-        .order-card div[style*="color: rgb(0, 255, 0)"], 
-        .order-card div[style*="color: #00ff00"],
-        .order-card span[style*="color: #00ff00"] {
-            color: #00ff00 !important;
-            -webkit-text-fill-color: #00ff00 !important;
-        }
-
-        /* 5. TEKST I ETYKIETY */
-        label, p, .stMarkdown {
+        
+        .order-card b, .order-card small, .order-card div {
             color: #1A1A1A !important;
         }
 
@@ -225,10 +208,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Inicjalizacja danych
-if 'data' not in st.session_state:
-    st.session_state['data'] = load_data()
-data = st.session_state['data']
+# Załadowanie danych
+data = load_data()
 
 if 'temp_skladniki' not in st.session_state: st.session_state['temp_skladniki'] = {}
 if 'show_add_order' not in st.session_state: st.session_state['show_add_order'] = False
@@ -531,6 +512,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
