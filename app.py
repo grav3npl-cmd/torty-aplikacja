@@ -534,6 +534,7 @@ elif menu == "Dodaj":
 
 #//--- 5.4. PRZEPISY (TORTY) ---//
 elif menu == "Przepisy":
+    # 1. TRYB EDYCJI
     if st.session_state['edit_recipe_index'] is not None:
         idx = st.session_state['edit_recipe_index']
         p = data["przepisy"][idx]
@@ -546,27 +547,86 @@ elif menu == "Przepisy":
             e_marza = c2.number_input("Marża", value=p.get('marza', 10))
             e_czas = c3.number_input("Czas", value=p.get('czas', 180))
             e_stawka = c4.number_input("Stawka", value=p.get('stawka_h', 20))
-            if st.form_submit_button("ZAPISZ ZMIANY"):
+            if st.form_submit_button("ZAPISZ ZMIANY", use_container_width=True):
                 p.update({"nazwa": e_nazwa, "opis": e_opis, "srednica": e_fi, "marza": e_marza, "czas": e_czas, "stawka_h": e_stawka})
                 save_data(data); st.session_state['edit_recipe_index'] = None; st.rerun()
-            if st.button("ANULUJ"):
+            if st.form_submit_button("ANULUJ", use_container_width=True):
                 st.session_state['edit_recipe_index'] = None; st.rerun()
+
+    # 2. TRYB SZCZEGÓŁÓW (FULLSCREEN)
     elif st.session_state['fullscreen_recipe'] is not None:
         p = data["przepisy"][st.session_state['fullscreen_recipe']]
-        if st.button("⬅️ WRÓĆ DO LISTY"): st.session_state['fullscreen_recipe'] = None; st.rerun()
-        st.markdown(f'<div class="order-card"><h1>{p["nazwa"]}</h1></div>', unsafe_allow_html=True)
-        if p.get('zdjecia'): st.image(p['zdjecia'][0], use_container_width=True)
-        st.write(f"Cena bazowa: **{oblicz_cene_tortu(p, data['skladniki'])} zł**")
+        
+        if st.button("⬅️ WRÓĆ DO LISTY", use_container_width=True): 
+            st.session_state['fullscreen_recipe'] = None; st.rerun()
+        
+        st.markdown(f'<div class="order-card"><h1 style="margin:0;">{p["nazwa"]}</h1></div>', unsafe_allow_html=True)
+        
+        if p.get('zdjecia'): 
+            st.image(p['zdjecia'][0], use_container_width=True)
+        
+        col_info1, col_info2 = st.columns(2)
+        with col_info1:
+            cena_b = oblicz_cene_tortu(p, data['skladniki'])
+            st.metric("Cena bazowa", f"{cena_b} zł")
+        
+        # OBLICZANIE SUMY KCAL
+        suma_kcal = 0
+        for sk_nazwa, ilosc in p["skladniki_przepisu"].items():
+            if sk_nazwa in data["skladniki"]:
+                sk_info = data["skladniki"][sk_nazwa]
+                # kcal podajemy zazwyczaj na 100g/ml
+                kcal_w_przepisie = (sk_info['kcal'] * ilosc) / 100
+                suma_kcal += kcal_w_przepisie
+        
+        with col_info2:
+            st.metric("Suma kalorii", f"{int(suma_kcal)} kcal")
+
+        st.write("---")
+        
+        # WYŚWIETLANIE SKŁADNIKÓW Z IKONAMI
+        st.subheader("🛒 Składniki")
+        for sk_nazwa, ilosc in p["skladniki_przepisu"].items():
+            ikona = data["skladniki"].get(sk_nazwa, {}).get("ikona", "📦")
+            st.markdown(f"""
+                <div style="background: white; border: 1px solid #f56cb3; border-radius: 10px; padding: 5px 15px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">{ikona}</span>
+                    <span style="flex-grow: 1;"><b>{sk_nazwa}</b></span>
+                    <span style="color: #ff0aef;">{ilosc} g/szt/ml</span>
+                </div>
+            """, unsafe_allow_html=True)
+
+        st.write("---")
+        st.subheader("👩‍🍳 Instrukcja")
         formatuj_instrukcje(p['opis'])
+
+    # 3. LISTA PRZEPISÓW
     else:
-        search = st.text_input("Szukaj tortu...", placeholder="Wpisz nazwę...")
+        search = st.text_input("🔍 Szukaj tortu...", placeholder="Wpisz nazwę...")
+        st.write("")
+        
         for i, p in enumerate(data["przepisy"]):
             if search.lower() in p["nazwa"].lower():
-                st.markdown(f'<div class="order-card"><div style="display: flex; justify-content: space-between; align-items: center;"><div><b>{p["nazwa"]}</b><br><small>Fi: {p.get("srednica", 20)}cm</small></div><div style="color: #00ff00; font-weight: bold;">{oblicz_cene_tortu(p, data["skladniki"])} zł</div></div></div>', unsafe_allow_html=True)
+                cena_t = oblicz_cene_tortu(p, data["skladniki"])
+                st.markdown(f"""
+                    <div class="order-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <b style="font-size: 1.2rem;">{p["nazwa"]}</b><br>
+                                <small>Średnica bazowa: {p.get("srednica", 20)}cm</small>
+                            </div>
+                            <div style="color: #00ff00; font-weight: bold; font-size: 1.2rem;">{cena_t} zł</div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
+                
                 c1, c2, c3 = st.columns(3, gap="small")
-                if c1.button("👁️ Otwórz", key=f"v_{i}", use_container_width=True): st.session_state['fullscreen_recipe'] = i; st.rerun()
-                if c2.button("✏️ Edytuj", key=f"re_{i}", use_container_width=True): st.session_state['edit_recipe_index'] = i; st.rerun()
-                if c3.button("🗑️ Usuń", key=f"rd_{i}", use_container_width=True): data["przepisy"].pop(i); save_data(data); st.rerun()
+                if c1.button("👁️ Otwórz", key=f"v_{i}", use_container_width=True): 
+                    st.session_state['fullscreen_recipe'] = i; st.rerun()
+                if c2.button("✏️ Edytuj", key=f"re_{i}", use_container_width=True): 
+                    st.session_state['edit_recipe_index'] = i; st.rerun()
+                if c3.button("🗑️ Usuń", key=f"rd_{i}", use_container_width=True): 
+                    data["przepisy"].pop(i); save_data(data); st.rerun()
 
 #//--- 5.5. GALERIA ---//
 elif menu == "Galeria":
@@ -584,6 +644,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
