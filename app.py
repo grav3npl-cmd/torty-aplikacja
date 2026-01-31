@@ -756,7 +756,7 @@ elif menu == "Przepisy":
                     st.error(f"Nie znaleziono danych dla warstwy: {w_nazwa}")
 
         st.write("---")
-        st.subheader("👩‍🍳 Instrukcja")
+        st.subheader("👩‍🍳 Instrukcja złożenia całości")
         formatuj_instrukcje(p['opis'])
 
     # 3. LISTA PRZEPISÓW
@@ -804,6 +804,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
