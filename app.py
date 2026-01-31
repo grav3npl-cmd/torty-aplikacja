@@ -15,51 +15,50 @@ os.makedirs(IMG_FOLDER, exist_ok=True)
 def load_data():
     if not os.path.exists(DB_FILE):
         return {
-            "skladniki": {
-                # BAZA PODSTAWOWA
-                "Jajko [szt]": {"cena": 1.20, "waga_opakowania": 1, "kcal": 155},
-                "Cukier drobny [g]": {"cena": 4.00, "waga_opakowania": 1000, "kcal": 387},
-                "Mąka pszenna [g]": {"cena": 3.50, "waga_opakowania": 1000, "kcal": 364},
-                "Mąka ziemniaczana [g]": {"cena": 5.00, "waga_opakowania": 500, "kcal": 348},
-                "Kakao [g]": {"cena": 7.00, "waga_opakowania": 200, "kcal": 228},
-                "Masło [g]": {"cena": 7.50, "waga_opakowania": 200, "kcal": 717},
-                "Olej [g]": {"cena": 10.00, "waga_opakowania": 1000, "kcal": 884},
-                "Żelatyna [g]": {"cena": 5.00, "waga_opakowania": 50, "kcal": 338},
-                "Proszek do pieczenia [g]": {"cena": 1.50, "waga_opakowania": 30, "kcal": 100},
+           "skladniki": {
+                # --- SKŁADNIKI (SPOŻYWCZE) ---
+                "Jajko [szt]": {"cena": 1.20, "waga_opakowania": 1, "kcal": 155, "ikona": "🥚", "kategoria": "Składniki"},
+                "Cukier drobny [g]": {"cena": 4.00, "waga_opakowania": 1000, "kcal": 387, "ikona": "🍬", "kategoria": "Składniki"},
+                "Mąka pszenna [g]": {"cena": 3.50, "waga_opakowania": 1000, "kcal": 364, "ikona": "🌾", "kategoria": "Składniki"},
+                "Mąka ziemniaczana [g]": {"cena": 5.00, "waga_opakowania": 500, "kcal": 348, "ikona": "🌾", "kategoria": "Składniki"},
+                "Skrobia ziemniaczana [g]": {"cena": 4.50, "waga_opakowania": 500, "kcal": 348, "ikona": "🌾", "kategoria": "Składniki"},
+                "Skrobia kukurydziana [g]": {"cena": 5.50, "waga_opakowania": 500, "kcal": 350, "ikona": "🌽", "kategoria": "Składniki"},
+                "Kakao [g]": {"cena": 7.00, "waga_opakowania": 200, "kcal": 228, "ikona": "🍫", "kategoria": "Składniki"},
+                "Masło [g]": {"cena": 7.50, "waga_opakowania": 200, "kcal": 717, "ikona": "🧈", "kategoria": "Składniki"},
+                "Tłuszcz [g]": {"cena": 6.00, "waga_opakowania": 250, "kcal": 900, "ikona": "🧈", "kategoria": "Składniki"},
+                "Olej [ml]": {"cena": 10.00, "waga_opakowania": 1000, "kcal": 884, "ikona": "🫗", "kategoria": "Składniki"},
+                "Oliwa [ml]": {"cena": 30.00, "waga_opakowania": 500, "kcal": 884, "ikona": "🫒", "kategoria": "Składniki"},
+                "Sól [g]": {"cena": 2.00, "waga_opakowania": 1000, "kcal": 0, "ikona": "🧂", "kategoria": "Składniki"},
+                "Żelatyna [g]": {"cena": 5.00, "waga_opakowania": 50, "kcal": 338, "ikona": "🧬", "kategoria": "Składniki"},
+                "Proszek do pieczenia [g]": {"cena": 1.50, "waga_opakowania": 30, "kcal": 100, "ikona": "🌬️", "kategoria": "Składniki"},
+                "Śmietana 30% [ml]": {"cena": 8.50, "waga_opakowania": 500, "kcal": 292, "ikona": "🥛", "kategoria": "Składniki"},
+                "Śmietana 36% [g]": {"cena": 9.50, "waga_opakowania": 500, "kcal": 340, "ikona": "🥛", "kategoria": "Składniki"},
+                "Mascarpone [g]": {"cena": 11.00, "waga_opakowania": 250, "kcal": 394, "ikona": "🍦", "kategoria": "Składniki"},
+                "Twaróg sernikowy [g]": {"cena": 15.00, "waga_opakowania": 1000, "kcal": 120, "ikona": "🍰", "kategoria": "Składniki"},
+                "Mleko [ml]": {"cena": 4.00, "waga_opakowania": 1000, "kcal": 42, "ikona": "🥛", "kategoria": "Składniki"},
+                "Czekolada biała [g]": {"cena": 6.00, "waga_opakowania": 100, "kcal": 539, "ikona": "⬜", "kategoria": "Składniki"},
+                "Czekolada mleczna [g]": {"cena": 5.50, "waga_opakowania": 100, "kcal": 535, "ikona": "🟫", "kategoria": "Składniki"},
+                "Czekolada gorzka 70% [g]": {"cena": 7.00, "waga_opakowania": 100, "kcal": 599, "ikona": "⬛", "kategoria": "Składniki"},
+                "Pasta pistacjowa [g]": {"cena": 50.00, "waga_opakowania": 200, "kcal": 600, "ikona": "🟢", "kategoria": "Składniki"},
+                "Pistacje obrane [g]": {"cena": 20.00, "waga_opakowania": 100, "kcal": 562, "ikona": "🥜", "kategoria": "Składniki"},
+                "Prażynka francuska [g]": {"cena": 14.00, "waga_opakowania": 200, "kcal": 450, "ikona": "🥨", "kategoria": "Składniki"},
+                "Ekstrakt z wanilii [ml]": {"cena": 25.00, "waga_opakowania": 50, "kcal": 288, "ikona": "🧪", "kategoria": "Składniki"},
+                "Maliny świeże/mrożone [g]": {"cena": 15.00, "waga_opakowania": 250, "kcal": 52, "ikona": "🍓", "kategoria": "Składniki"},
+                "Wiśnie mrożone [g]": {"cena": 12.00, "waga_opakowania": 500, "kcal": 50, "ikona": "🍒", "kategoria": "Składniki"},
+                "Truskawki [g]": {"cena": 10.00, "waga_opakowania": 500, "kcal": 33, "ikona": "🍓", "kategoria": "Składniki"},
+                "Mus z malin (frużelina) [g]": {"cena": 18.00, "waga_opakowania": 500, "kcal": 80, "ikona": "🍯", "kategoria": "Składniki"},
+                "Cytryna [szt]": {"cena": 2.00, "waga_opakowania": 1, "kcal": 30, "ikona": "🍋", "kategoria": "Składniki"},
+                "Orzechy laskowe [g]": {"cena": 12.00, "waga_opakowania": 100, "kcal": 628, "ikona": "🥜", "kategoria": "Składniki"},
+                "Orzechy włoskie [g]": {"cena": 10.00, "waga_opakowania": 100, "kcal": 654, "ikona": "🥜", "kategoria": "Składniki"},
 
-                # NABIAŁ I KREMY
-                "Śmietana 30% [ml]": {"cena": 8.50, "waga_opakowania": 500, "kcal": 292},
-                "Śmietana 36% [g]": {"cena": 9.50, "waga_opakowania": 500, "kcal": 340},
-                "Mascarpone [g]": {"cena": 11.00, "waga_opakowania": 250, "kcal": 394},
-                "Twaróg sernikowy [g]": {"cena": 15.00, "waga_opakowania": 1000, "kcal": 120},
-                "Mleko [ml]": {"cena": 4.00, "waga_opakowania": 1000, "kcal": 42},
+                # --- DODATKI ---
+                "Barwnik spożywczy [szt]": {"cena": 12.00, "waga_opakowania": 1, "kcal": 0, "ikona": "🎨", "kategoria": "Dodatki"},
+                "Podkład pod tort [szt]": {"cena": 5.00, "waga_opakowania": 1, "kcal": 0, "ikona": "💿", "kategoria": "Dodatki"},
+                "Rum / Likier [ml]": {"cena": 40.00, "waga_opakowania": 500, "kcal": 230, "ikona": "🥃", "kategoria": "Dodatki"},
 
-                # CZEKOLADY I DODATKI SMAKOWE
-                "Czekolada biała [g]": {"cena": 6.00, "waga_opakowania": 100, "kcal": 539},
-                "Czekolada mleczna [g]": {"cena": 5.50, "waga_opakowania": 100, "kcal": 535},
-                "Czekolada gorzka 70% [g]": {"cena": 7.00, "waga_opakowania": 100, "kcal": 599},
-                "Pasta pistacjowa [g]": {"cena": 50.00, "waga_opakowania": 200, "kcal": 600},
-                "Prażynka francuska [g]": {"cena": 14.00, "waga_opakowania": 200, "kcal": 450},
-                "Ekstrakt z wanilii [ml]": {"cena": 25.00, "waga_opakowania": 50, "kcal": 288},
-
-                # OWOCE I KONFITURY
-                "Maliny świeże/mrożone [g]": {"cena": 15.00, "waga_opakowania": 250, "kcal": 52},
-                "Wiśnie mrożone [g]": {"cena": 12.00, "waga_opakowania": 500, "kcal": 50},
-                "Truskawki [g]": {"cena": 10.00, "waga_opakowania": 500, "kcal": 33},
-                "Mus z malin (frużelina) [g]": {"cena": 18.00, "waga_opakowania": 500, "kcal": 80},
-                "Cytryna [szt]": {"cena": 2.00, "waga_opakowania": 1, "kcal": 30},
-
-                # ORZECHY
-                "Pistacje obrane [g]": {"cena": 20.00, "waga_opakowania": 100, "kcal": 562},
-                "Orzechy laskowe [g]": {"cena": 12.00, "waga_opakowania": 100, "kcal": 628},
-                "Orzechy włoskie [g]": {"cena": 10.00, "waga_opakowania": 100, "kcal": 654},
-
-                # DEKORACJA I INNE
-                "Barwnik spożywczy [szt]": {"cena": 12.00, "waga_opakowania": 1, "kcal": 0},
-                "Podkład pod tort [szt]": {"cena": 5.00, "waga_opakowania": 1, "kcal": 0},
-                "Pudełko na tort [szt]": {"cena": 6.00, "waga_opakowania": 1, "kcal": 0},
-                "Rum / Likier do nasączania [ml]": {"cena": 40.00, "waga_opakowania": 500, "kcal": 230}
-            },
+                # --- OPAKOWANIA ---
+                "Pudełko na tort [szt]": {"cena": 6.00, "waga_opakowania": 1, "kcal": 0, "ikona": "📦", "kategoria": "Opakowania"}
+            }
             "przepisy": [],
             "kalendarz": [],
             "galeria_extra": [] 
@@ -403,113 +402,89 @@ elif menu == "Magazyn":
     st.caption("ZARZĄDZANIE ASORTYMENTEM")
     data = load_data()
     
-    # 1. FORMULARZ EDYCJI (Jeśli wybrano produkt do edycji)
+    # 1. TRYB EDYCJI
     if st.session_state.get('edit_ing_key'):
-        st.subheader(f"✏️ Edytujesz: {st.session_state['edit_ing_key']}")
         old_name = st.session_state['edit_ing_key']
         v = data["skladniki"][old_name]
         
-        with st.form("edit_ing_form"):
-            new_name = st.text_input("Nazwa produktu", value=old_name)
-            col1, col2 = st.columns(2)
-            new_kat = col1.selectbox("Kategoria", ["Składniki", "Dodatki", "Opakowania"], 
-                                    index=["Składniki", "Dodatki", "Opakowania"].index(v.get("kategoria", "Składniki")))
-            new_icon = col2.selectbox("Ikona", ["📦","🥚","🌾","🧈","🍦","🍓","🍬","🍫","🍋","🥃","🕯️","🎀","📦","🚚"])
-            
-            col3, col4, col5 = st.columns(3)
-            new_kcal = col3.number_input("Kcal/100g", value=v.get("kcal", 0))
-            new_weight = col4.number_input("Waga/Ilość", value=v.get("waga_opakowania", 1))
-            new_price = col5.number_input("Cena", value=float(v.get("cena", 0.01)))
-            
-            c_save, c_ann = st.columns(2)
-            if c_save.form_submit_button("ZAPISZ ZMIANY", use_container_width=True):
-                # Jeśli nazwa się zmieniła, usuwamy starą i dodajemy nową
-                if new_name != old_name:
-                    del data["skladniki"][old_name]
+        with st.container(border=True):
+            st.subheader(f"✏️ Edycja: {old_name}")
+            with st.form("edit_ing_form"):
+                new_name = st.text_input("Nazwa produktu", value=old_name)
+                new_kat = st.selectbox("Kategoria", ["Składniki", "Dodatki", "Opakowania"], 
+                                      index=["Składniki", "Dodatki", "Opakowania"].index(v.get("kategoria", "Składniki")))
                 
-                data["skladniki"][new_name] = {
-                    "cena": new_price,
-                    "waga_opakowania": new_weight,
-                    "kcal": new_kcal,
-                    "ikona": new_icon,
-                    "kategoria": new_kat
-                }
-                save_data(data)
-                st.session_state['edit_ing_key'] = None
-                st.success("Zaktualizowano pomyślnie!")
-                st.rerun()
-            
-            if c_ann.form_submit_button("ANULUJ", use_container_width=True):
-                st.session_state['edit_ing_key'] = None
-                st.rerun()
+                c1, c2, c3 = st.columns(3)
+                new_kcal = c1.number_input("Kcal/100g", value=v.get("kcal", 0))
+                new_weight = c2.number_input("Waga/Ilość", value=v.get("waga_opakowania", 1))
+                new_price = c3.number_input("Cena", value=float(v.get("cena", 0.01)))
+                
+                b1, b2 = st.columns(2)
+                if b1.form_submit_button("ZAPISZ ZMIANY", use_container_width=True):
+                    if new_name != old_name: del data["skladniki"][old_name]
+                    
+                    data["skladniki"][new_name] = {
+                        "cena": new_price, "waga_opakowania": new_weight,
+                        "kcal": new_kcal, "kategoria": new_kat,
+                        "ikona": dobierz_ikone(new_name) # Automatyczna ikona
+                    }
+                    save_data(data); st.session_state['edit_ing_key'] = None; st.rerun()
+                if b2.form_submit_button("ANULUJ", use_container_width=True):
+                    st.session_state['edit_ing_key'] = None; st.rerun()
 
-    # 2. FORMULARZ DODAWANIA NOWEGO PRODUKTU
+    # 2. DODAWANIE NOWEGO
     else:
-        with st.expander("➕ DODAJ NOWY PRODUKT / OPAKOWANIE"):
-            with st.form("magazyn_add"):
-                c1, c2, c3 = st.columns([2, 1, 1])
-                nn = c1.text_input("Nazwa")
-                nk = c2.selectbox("Kategoria", ["Składniki", "Dodatki", "Opakowania"])
-                ni = c3.selectbox("Ikona", ["📦","🥚","🌾","🧈","🍦","🍓","🍬","🍫","🕯️","🎀","📦"])
+        with st.expander("➕ DODAJ DO MAGAZYNU"):
+            with st.form("magazyn_add_quick"):
+                nn = st.text_input("Nazwa produktu (np. Olej słonecznikowy)")
+                nk = st.selectbox("Kategoria", ["Składniki", "Dodatki", "Opakowania"])
                 
-                c4, c5, c6 = st.columns(3)
-                kcal = c4.number_input("Kcal/100g", min_value=0)
-                waga = c5.number_input("Waga opakowania", min_value=1)
-                cena = c6.number_input("Cena opakowania", min_value=0.01)
+                c1, c2, c3 = st.columns(3)
+                kcal = c1.number_input("Kcal/100g", min_value=0)
+                waga = c2.number_input("Waga/Szt", min_value=1)
+                cena = c3.number_input("Cena (zł)", min_value=0.01)
                 
-                if st.form_submit_button("ZAPISZ W MAGAZYNIE", use_container_width=True) and nn:
+                if st.form_submit_button("DODAJ PRODUKT", use_container_width=True) and nn:
                     data["skladniki"][nn] = {
                         "cena": cena, "waga_opakowania": waga, "kcal": kcal, 
-                        "ikona": ni, "kategoria": nk
+                        "kategoria": nk, "ikona": dobierz_ikone(nn)
                     }
-                    save_data(data)
-                    st.rerun()
+                    save_data(data); st.rerun()
 
     st.write("---")
     
-    # 3. WYŚWIETLANIE Z PODZIAŁEM NA KATEGORIE
-    tabs = st.tabs(["🍎 Składniki", "🎀 Dodatki", "📦 Opakowania"])
+    # 3. WYŚWIETLANIE TABS
+    t1, t2, t3 = st.tabs(["🍎 Składniki", "🎀 Dodatki", "📦 Opakowania"])
+    kat_list = [("Składniki", t1), ("Dodatki", t2), ("Opakowania", t3)]
     
-    kategorie_map = {
-        "Składniki": tabs[0],
-        "Dodatki": tabs[1],
-        "Opakowania": tabs[2]
-    }
-    
-    # Grupowanie i wyświetlanie
-    for kat_nazwa, tab_obj in kategorie_map.items():
+    for kat_name, tab_obj in kat_list:
         with tab_obj:
-            produkty_w_kat = {k: v for k, v in data["skladniki"].items() if v.get("kategoria", "Składniki") == kat_nazwa}
-            
-            if not produkty_w_kat:
-                st.info(f"Brak produktów w kategorii {kat_nazwa}")
+            prods = {k: v for k, v in data["skladniki"].items() if v.get("kategoria", "Składniki") == kat_name}
+            if not prods:
+                st.info("Pusto w tej kategorii.")
             else:
-                for k, v in produkty_w_kat.items():
+                for k, v in prods.items():
                     st.markdown(f"""
                         <div class="order-card">
                             <div style="display: flex; align-items: center; gap: 15px;">
-                                <div style="font-size: 30px; background: #f0f0f0; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                                <div style="font-size: 28px; background: #fdf5e6; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border: 1px solid #f56cb3;">
                                     {v.get('ikona', '📦')}
                                 </div>
                                 <div style="flex-grow: 1;">
-                                    <b style="font-size: 1.1rem; color: #1A1A1A;">{k}</b><br>
-                                    <small style="color: #666;">{v.get('kcal',0)} kcal | {v.get('waga_opakowania',1)}g/szt</small>
+                                    <b style="font-size: 1.1rem;">{k}</b><br>
+                                    <small>{v.get('kcal',0)} kcal | {v.get('waga_opakowania',1)}g/szt</small>
                                 </div>
-                                <div style="text-align: right; color: #00ff00; font-weight: bold;">
+                                <div style="text-align: right; color: #00ff00; font-weight: bold; font-size: 1.1rem;">
                                     {v.get('cena',0):.2f} zł
                                 </div>
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
-                    
-                    ce, cd = st.columns(2)
-                    if ce.button("Edytuj", key=f"ed_{k}", use_container_width=True):
-                        st.session_state['edit_ing_key'] = k
-                        st.rerun()
-                    if cd.button("Usuń", key=f"del_{k}", use_container_width=True):
-                        del data["skladniki"][k]
-                        save_data(data)
-                        st.rerun()
+                    c_e, c_d = st.columns(2)
+                    if c_e.button("Edytuj", key=f"e_{k}", use_container_width=True):
+                        st.session_state['edit_ing_key'] = k; st.rerun()
+                    if c_d.button("Usuń", key=f"d_{k}", use_container_width=True):
+                        del data["skladniki"][k]; save_data(data); st.rerun()
 
 #//--- 5.3. DODAJ PRZEPIS ---//
 elif menu == "Dodaj":
@@ -718,6 +693,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
