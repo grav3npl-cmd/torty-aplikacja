@@ -15,7 +15,7 @@ os.makedirs(IMG_FOLDER, exist_ok=True)
 def load_data():
     if not os.path.exists(DB_FILE):
         return {
-           "skladniki": {
+            "skladniki": {
                 # --- SKŁADNIKI (SPOŻYWCZE) ---
                 "Jajko [szt]": {"cena": 1.20, "waga_opakowania": 1, "kcal": 155, "ikona": "🥚", "kategoria": "Składniki"},
                 "Cukier drobny [g]": {"cena": 4.00, "waga_opakowania": 1000, "kcal": 387, "ikona": "🍬", "kategoria": "Składniki"},
@@ -58,7 +58,7 @@ def load_data():
 
                 # --- OPAKOWANIA ---
                 "Pudełko na tort [szt]": {"cena": 6.00, "waga_opakowania": 1, "kcal": 0, "ikona": "📦", "kategoria": "Opakowania"}
-            }
+            },
             "przepisy": [],
             "kalendarz": [],
             "galeria_extra": [] 
@@ -693,6 +693,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
