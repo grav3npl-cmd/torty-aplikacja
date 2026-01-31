@@ -730,11 +730,30 @@ elif menu == "Przepisy":
                 </div>
             """, unsafe_allow_html=True)
 
-        if p.get("typ") == "Tort" and "warstwy" in p:
+            if p.get("typ") == "Tort" and "warstwy" in p:
             st.write("---")
-            st.subheader("🥞 Struktura warstw")
-            for w in p["warstwy"]:
-                st.info(f"Warstwa: **{w}**")
+            st.subheader("🥞 Struktura warstw (kliknij, aby zobaczyć przepis)")
+            
+            for w_nazwa in p["warstwy"]:
+                # Szukamy pełnych danych o warstwie w bazie
+                w_data = next((prz for prz in data["przepisy"] if prz["nazwa"] == w_nazwa), None)
+                
+                if w_data:
+                    with st.expander(f"📋 Warstwa: {w_nazwa}"):
+                        c_w1, c_w2 = st.columns([1, 1])
+                        
+                        with c_w1:
+                            st.write("**Składniki bazowe:**")
+                            # Wyświetlamy składniki z przepisu warstwy
+                            for s_w, il_w in w_data.get("skladniki_przepisu", {}).items():
+                                ikona_w = data["skladniki"].get(s_w, {}).get("ikona", "📦")
+                                st.write(f"{ikona_w} {s_w}: {il_w} g/szt/ml")
+                        
+                        with c_w2:
+                            st.write("**Instrukcja wykonania:**")
+                            st.info(w_data.get("opis", "Brak opisu."))
+                else:
+                    st.error(f"Nie znaleziono danych dla warstwy: {w_nazwa}")
 
         st.write("---")
         st.subheader("👩‍🍳 Instrukcja")
@@ -785,6 +804,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
