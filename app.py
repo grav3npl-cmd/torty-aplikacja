@@ -575,6 +575,7 @@ elif menu == "Dodaj":
         with st.form("new_sub_recipe"):
             nazwa_r = st.text_input("Nazwa (np. Biszkopt kakaowy)")
             opis_r = st.text_area("Instrukcja")
+            zdjecia_r = st.file_uploader("Dodaj zdjęcia", accept_multiple_files=True, key="img_sub")
             col1, col2 = st.columns(2)
             fi_r = col1.number_input("Średnica bazowa (cm)", value=20)
             
@@ -673,6 +674,11 @@ elif menu == "Przepisy":
             st.session_state['fullscreen_recipe'] = None; st.rerun()
         
         st.markdown(f'<div class="order-card"><h1 style="margin:0;">{p["nazwa"]} ({p.get("typ", "Tort")})</h1></div>', unsafe_allow_html=True)
+        if p.get('zdjecia'):
+            cols_img = st.columns(min(len(p['zdjecia']), 3))
+            for i, img_path in enumerate(p['zdjecia']):
+                if os.path.exists(img_path):
+                    cols_img[i % 3].image(img_path, use_container_width=True)
         
         # SUWAK DYNAMICZNEGO PRZELICZANIA
         st.write("### 📏 Dostosuj rozmiar tortu")
@@ -730,32 +736,30 @@ elif menu == "Przepisy":
                 </div>
             """, unsafe_allow_html=True)
 
-            # --- SEKCJA ROZWIJANYCH WARSTW (Poprawione wcięcia) ---
+           # --- SEKCJA ROZWIJANYCH WARSTW (Z DYNAMICZNYMI ILOŚCIAMI) ---
         if p.get("typ") == "Tort" and "warstwy" in p:
             st.write("---")
-            st.subheader("🥞 Struktura warstw (kliknij, aby zobaczyć przepis)")
+            st.subheader(f"🥞 Przepisy na warstwy (przeliczone na Fi {nowa_fi})")
             
+            # Obliczamy współczynnik dla warstw (cel / baza głównego tortu)
+            k_dynamiczne = (nowa_fi / p.get("srednica", 20))**2
+
             for w_nazwa in p["warstwy"]:
-                # Szukamy pełnych danych o warstwie w bazie
                 w_data = next((prz for prz in data["przepisy"] if prz["nazwa"] == w_nazwa), None)
                 
                 if w_data:
-                    with st.expander(f"📋 Warstwa: {w_nazwa}"):
+                    with st.expander(f"📋 {w_nazwa}"):
                         c_w1, c_w2 = st.columns([1, 1])
-                        
                         with c_w1:
-                            st.write("**Składniki bazowe:**")
-                            # Wyświetlamy składniki z przepisu warstwy
+                            st.write("**Składniki:**")
                             skladniki_w = w_data.get("skladniki_przepisu", {})
-                            if skladniki_w:
-                                for s_w, il_w in skladniki_w.items():
-                                    ikona_w = data["skladniki"].get(s_w, {}).get("ikona", "📦")
-                                    st.write(f"{ikona_w} {s_w}: {il_w} g/szt/ml")
-                            else:
-                                st.write("Brak składników w bazie.")
-                        
+                            for s_w, il_w in skladniki_w.items():
+                                ikona_w = data["skladniki"].get(s_w, {}).get("ikona", "📦")
+                                # TUTAJ: Mnożymy bazową ilość przez k_dynamiczne
+                                ilosc_przeliczona = il_w * k_dynamiczne
+                                st.write(f"{ikona_w} {s_w}: **{ilosc_przeliczona:.1f}** g/szt/ml")
                         with c_w2:
-                            st.write("**Instrukcja wykonania:**")
+                            st.write("**Instrukcja:**")
                             st.info(w_data.get("opis", "Brak opisu."))
                 else:
                     st.error(f"Nie znaleziono danych dla warstwy: {w_nazwa}")
@@ -798,30 +802,56 @@ elif menu == "Przepisy":
 #//--- 5.5. GALERIA ---//
 elif menu == "Galeria":
     st.caption("GALERIA TWOICH DZIEŁ")
+    data = load_data()
+
+    # 1. SEKACJA DODAWANIA WOLNYCH ZDJĘĆ
+    with st.expander("➕ Dodaj nowe zdjęcia do galerii (nieprzypisane)"):
+        wolne_zdjecia = st.file_uploader("Wybierz pliki", accept_multiple_files=True, key="gal_upload")
+        if st.button("ZAPISZ W GALERII", use_container_width=True):
+            if wolne_zdjecia:
+                nowe_sciezki = save_uploaded_files(wolne_zdjecia)
+                if "galeria_extra" not in data: data["galeria_extra"] = []
+                data["galeria_extra"].extend(nowe_sciezki)
+                save_data(data)
+                st.success("Dodano zdjęcia do galerii ogólnej!")
+                st.rerun()
+
+    # 2. PRZYGOTOWANIE LISTY WSZYSTKICH ZDJĘĆ
     wszystkie = []
+    
+    # Zdjęcia z przepisów
     for idx, p in enumerate(data["przepisy"]):
         for f in p.get("zdjecia", []):
-            if os.path.exists(f): wszystkie.append({"src": f, "name": p["nazwa"], "idx": idx})
-    if not wszystkie: st.info("Brak zdjęć w galerii.")
+            if os.path.exists(f): 
+                wszystkie.append({"src": f, "name": p["nazwa"], "idx": idx, "typ": "przepis"})
+    
+    # Zdjęcia wolne
+    if "galeria_extra" in data:
+        for i, f in enumerate(data["galeria_extra"]):
+            if os.path.exists(f):
+                wszystkie.append({"src": f, "name": "Inne / Inspiracja", "idx": i, "typ": "wolne"})
+
+    # 3. WYŚWIETLANIE
+    if not wszystkie:
+        st.info("Brak zdjęć w galerii.")
     else:
-        cols = st.columns(2)
+        # Wyświetlamy w siatce 3-kolumnowej dla lepszego efektu
+        cols = st.columns(3)
         for i, item in enumerate(wszystkie):
-            with cols[i % 2]:
-                st.markdown(f'<div class="order-card"><b>{item["name"]}</b></div>', unsafe_allow_html=True)
+            with cols[i % 3]:
                 st.image(item["src"], use_container_width=True)
-                if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
-                    st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
-
-
-
-
-
-
-
-
-
-
-
+                st.caption(f"**{item['name']}**")
+                
+                if item["typ"] == "przepis":
+                    if st.button("👁️ Przepis", key=f"g_v_{i}", use_container_width=True):
+                        st.session_state['menu'] = "Przepisy"
+                        st.session_state['fullscreen_recipe'] = item["idx"]
+                        st.rerun()
+                else:
+                    if st.button("🗑️ Usuń", key=f"g_d_{i}", use_container_width=True):
+                        data["galeria_extra"].pop(item["idx"])
+                        save_data(data)
+                        st.rerun()
 
 
 
