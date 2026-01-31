@@ -400,42 +400,116 @@ if menu == "Kalendarz":
 
 #//--- 5.2. MAGAZYN ---//
 elif menu == "Magazyn":
-    st.caption("MAGAZYN SKŁADNIKÓW")
-    with st.expander("➕ DODAJ NOWY PRODUKT"):
-        with st.form("magazyn_add"):
-            c1, c2 = st.columns(2)
-            nn = c1.text_input("Nazwa produktu")
-            nk = c2.number_input("Kcal na 100g/szt", min_value=0)
-            nw = c1.number_input("Waga opakowania (g/szt)", min_value=1)
-            np = c2.number_input("Cena opakowania", min_value=0.01)
-            if st.form_submit_button("ZAPISZ W MAGAZYNIE", use_container_width=True) and nn:
-                data["skladniki"][nn] = {"cena": np, "waga_opakowania": nw, "kcal": nk}
-                save_data(data); st.rerun()
+    st.caption("ZARZĄDZANIE ASORTYMENTEM")
+    data = load_data()
+    
+    # 1. FORMULARZ EDYCJI (Jeśli wybrano produkt do edycji)
+    if st.session_state.get('edit_ing_key'):
+        st.subheader(f"✏️ Edytujesz: {st.session_state['edit_ing_key']}")
+        old_name = st.session_state['edit_ing_key']
+        v = data["skladniki"][old_name]
+        
+        with st.form("edit_ing_form"):
+            new_name = st.text_input("Nazwa produktu", value=old_name)
+            col1, col2 = st.columns(2)
+            new_kat = col1.selectbox("Kategoria", ["Składniki", "Dodatki", "Opakowania"], 
+                                    index=["Składniki", "Dodatki", "Opakowania"].index(v.get("kategoria", "Składniki")))
+            new_icon = col2.selectbox("Ikona", ["📦","🥚","🌾","🧈","🍦","🍓","🍬","🍫","🍋","🥃","🕯️","🎀","📦","🚚"])
+            
+            col3, col4, col5 = st.columns(3)
+            new_kcal = col3.number_input("Kcal/100g", value=v.get("kcal", 0))
+            new_weight = col4.number_input("Waga/Ilość", value=v.get("waga_opakowania", 1))
+            new_price = col5.number_input("Cena", value=float(v.get("cena", 0.01)))
+            
+            c_save, c_ann = st.columns(2)
+            if c_save.form_submit_button("ZAPISZ ZMIANY", use_container_width=True):
+                # Jeśli nazwa się zmieniła, usuwamy starą i dodajemy nową
+                if new_name != old_name:
+                    del data["skladniki"][old_name]
+                
+                data["skladniki"][new_name] = {
+                    "cena": new_price,
+                    "waga_opakowania": new_weight,
+                    "kcal": new_kcal,
+                    "ikona": new_icon,
+                    "kategoria": new_kat
+                }
+                save_data(data)
+                st.session_state['edit_ing_key'] = None
+                st.success("Zaktualizowano pomyślnie!")
+                st.rerun()
+            
+            if c_ann.form_submit_button("ANULUJ", use_container_width=True):
+                st.session_state['edit_ing_key'] = None
+                st.rerun()
+
+    # 2. FORMULARZ DODAWANIA NOWEGO PRODUKTU
+    else:
+        with st.expander("➕ DODAJ NOWY PRODUKT / OPAKOWANIE"):
+            with st.form("magazyn_add"):
+                c1, c2, c3 = st.columns([2, 1, 1])
+                nn = c1.text_input("Nazwa")
+                nk = c2.selectbox("Kategoria", ["Składniki", "Dodatki", "Opakowania"])
+                ni = c3.selectbox("Ikona", ["📦","🥚","🌾","🧈","🍦","🍓","🍬","🍫","🕯️","🎀","📦"])
+                
+                c4, c5, c6 = st.columns(3)
+                kcal = c4.number_input("Kcal/100g", min_value=0)
+                waga = c5.number_input("Waga opakowania", min_value=1)
+                cena = c6.number_input("Cena opakowania", min_value=0.01)
+                
+                if st.form_submit_button("ZAPISZ W MAGAZYNIE", use_container_width=True) and nn:
+                    data["skladniki"][nn] = {
+                        "cena": cena, "waga_opakowania": waga, "kcal": kcal, 
+                        "ikona": ni, "kategoria": nk
+                    }
+                    save_data(data)
+                    st.rerun()
 
     st.write("---")
-    if data["skladniki"]:
-        for k, v in list(data["skladniki"].items()):
-            if st.session_state['edit_ing_key'] == k:
-                with st.container(border=True):
-                    with st.form(f"ef_{k}"):
-                        st.write(f"✏️ Edytujesz: **{k}**")
-                        c1, c2, c3 = st.columns(3)
-                        nk = c1.number_input("Kcal", value=v['kcal'])
-                        nw = c2.number_input("Waga", value=v['waga_opakowania'])
-                        np = c3.number_input("Cena", value=v['cena'])
-                        c_b1, c_b2 = st.columns(2)
-                        if c_b1.form_submit_button("ZAPISZ"):
-                            data["skladniki"][k] = {"cena": np, "waga_opakowania": nw, "kcal": nk}
-                            save_data(data); st.session_state['edit_ing_key'] = None; st.rerun()
-                        if c_b2.form_submit_button("ANULUJ"):
-                            st.session_state['edit_ing_key'] = None; st.rerun()
+    
+    # 3. WYŚWIETLANIE Z PODZIAŁEM NA KATEGORIE
+    tabs = st.tabs(["🍎 Składniki", "🎀 Dodatki", "📦 Opakowania"])
+    
+    kategorie_map = {
+        "Składniki": tabs[0],
+        "Dodatki": tabs[1],
+        "Opakowania": tabs[2]
+    }
+    
+    # Grupowanie i wyświetlanie
+    for kat_nazwa, tab_obj in kategorie_map.items():
+        with tab_obj:
+            produkty_w_kat = {k: v for k, v in data["skladniki"].items() if v.get("kategoria", "Składniki") == kat_nazwa}
+            
+            if not produkty_w_kat:
+                st.info(f"Brak produktów w kategorii {kat_nazwa}")
             else:
-                st.markdown(f'<div class="order-card"><div style="display: flex; justify-content: space-between; align-items: center;"><div><b>{k}</b><br><small>{v["kcal"]} kcal | {v["waga_opakowania"]}g</small></div><div style="text-align: right; color: #00ff00; font-weight: bold;">{v["cena"]:.2f} zł</div></div></div>', unsafe_allow_html=True)
-                c_e, c_d = st.columns(2, gap="small")
-                if c_e.button("Edytuj", key=f"ed_{k}", use_container_width=True):
-                    st.session_state['edit_ing_key'] = k; st.rerun()
-                if c_d.button("Usuń", key=f"del_{k}", use_container_width=True):
-                    del data["skladniki"][k]; save_data(data); st.rerun()
+                for k, v in produkty_w_kat.items():
+                    st.markdown(f"""
+                        <div class="order-card">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div style="font-size: 30px; background: #f0f0f0; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                                    {v.get('ikona', '📦')}
+                                </div>
+                                <div style="flex-grow: 1;">
+                                    <b style="font-size: 1.1rem; color: #1A1A1A;">{k}</b><br>
+                                    <small style="color: #666;">{v.get('kcal',0)} kcal | {v.get('waga_opakowania',1)}g/szt</small>
+                                </div>
+                                <div style="text-align: right; color: #00ff00; font-weight: bold;">
+                                    {v.get('cena',0):.2f} zł
+                                </div>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    ce, cd = st.columns(2)
+                    if ce.button("Edytuj", key=f"ed_{k}", use_container_width=True):
+                        st.session_state['edit_ing_key'] = k
+                        st.rerun()
+                    if cd.button("Usuń", key=f"del_{k}", use_container_width=True):
+                        del data["skladniki"][k]
+                        save_data(data)
+                        st.rerun()
 
 #//--- 5.3. DODAJ PRZEPIS ---//
 elif menu == "Dodaj":
@@ -644,6 +718,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
