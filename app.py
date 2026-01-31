@@ -70,6 +70,27 @@ def load_data():
         if "galeria_extra" not in data: data["galeria_extra"] = []
         return data
 
+# --- DODAJ TO W SEKCJI 2 ---
+
+def dobierz_ikone(nazwa):
+    """Automatycznie dobiera ikonę na podstawie nazwy produktu."""
+    n = nazwa.lower()
+    if "jaj" in n: return "🥚"
+    if "mąk" in n or "skrob" in n: return "🌾"
+    if "masł" in n or "tłuszcz" in n: return "🧈"
+    if "olej" in n or "oliw" in n: return "🫗"
+    if "cukier" in n: return "🍬"
+    if "czekolada" in n: return "🍫"
+    if "śmietan" in n or "mlek" in n: return "🥛"
+    if "owoc" in n or "malin" in n or "trusk" in n or "wiśn" in n: return "🍓"
+    if "pistac" in n or "orzech" in n: return "🥜"
+    if "pudełk" in n or "karton" in n: return "📦"
+    if "świecz" in n or "topper" in n: return "🕯️"
+    if "sól" in n: return "🧂"
+    if "kakao" in n: return "🍫"
+    if "cytryn" in n: return "🍋"
+    return "📦" # Ikona domyślna
+
 def save_data(data):
     with open(DB_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
@@ -693,6 +714,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
