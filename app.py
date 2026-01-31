@@ -126,26 +126,44 @@ def formatuj_instrukcje(tekst):
         else:
             st.write(l)
 
-def oblicz_cene_tortu(przepis, data_skladnikow, srednica_docelowa=None):
-    if not srednica_docelowa:
-        srednica_docelowa = przepis.get('srednica', 20)
-    baza_cm = przepis.get('srednica', 20)
-    wsp = (srednica_docelowa / baza_cm) ** 2
+def oblicz_cene_tortu(przepis, magazyn, docelowa_fi=None):
+    # Jeśli nie podano średnicy docelowej, używamy bazowej z przepisu
+    if docelowa_fi is None:
+        docelowa_fi = przepis.get("srednica", 20)
     
+    # Współczynnik przeliczeniowy (proporcja powierzchni)
+    # k = (docelowa_fi / bazowa_fi)^2
+    bazowa_fi = przepis.get("srednica", 20)
+    k = (docelowa_fi / bazowa_fi) ** 2
+
     koszt_skladnikow = 0
-    for sk, il in przepis["skladniki_przepisu"].items():
-        if sk in data_skladnikow:
-            info = data_skladnikow[sk]
-            cena_g = info["cena"] / info["waga_opakowania"]
-            koszt_skladnikow += (cena_g * il * wsp)
+
+    # TYP A: Półprodukt lub stary przepis (ma bezpośrednio składniki)
+    if "skladniki_przepisu" in przepis:
+        for nazwa, ilosc in przepis["skladniki_przepisu"].items():
+            if nazwa in magazyn:
+                m = magazyn[nazwa]
+                cena_jednostkowa = m["cena"] / m["waga_opakowania"]
+                koszt_skladnikow += (ilosc * k) * cena_jednostkowa
+
+    # TYP B: Tort złożony z warstw
+    elif "warstwy" in przepis:
+        for nazwa_warstwy in przepis["warstwy"]:
+            # Szukamy przepisu na tę warstwę w bazie danych
+            # (Zakładamy, że 'data' jest dostępna lub przekazana)
+            ref_warstwa = next((p for p in st.session_state['data']["przepisy"] if p["nazwa"] == nazwa_warstwy), None)
+            if ref_warstwa:
+                # Rekurencyjnie liczymy cenę warstwy przeliczoną na docelową średnicę tortu
+                koszt_skladnikow += oblicz_cene_tortu(ref_warstwa, magazyn, docelowa_fi)
+
+    # Dodajemy Twój zarobek i marżę (tylko dla finalnego tortu)
+    if przepis.get("typ") == "Tort" or "warstwy" in przepis:
+        zarobek = (przepis.get("czas", 0) / 60) * przepis.get("stawka_h", 0)
+        suma = koszt_skladnikow + zarobek
+        marza_val = suma * (przepis.get("marza", 0) / 100)
+        return round(suma + marza_val, 2)
     
-    marza_proc = przepis.get('marza', 10)
-    czas = przepis.get('czas', 180)
-    stawka_h = przepis.get('stawka_h', 20)
-    
-    koszt_pracy = (czas/60) * stawka_h
-    cena_koncowa = koszt_skladnikow * (1 + marza_proc/100) + koszt_pracy
-    return round(cena_koncowa, 2)
+    return round(koszt_skladnikow, 2)
 
 def render_stars(value):
     try: val = int(round(float(value)))
@@ -626,7 +644,7 @@ elif menu == "Dodaj":
                         st.success(f"Złożono tort: {nazwa_t}")
                         st.rerun()
 
-#//--- 5.4. PRZEPISY (TORTY) ---//
+#//--- 5.4. PRZEPISY (TORTY I PÓŁPRODUKTY) ---//
 elif menu == "Przepisy":
     # 1. TRYB EDYCJI
     if st.session_state['edit_recipe_index'] is not None:
@@ -637,58 +655,86 @@ elif menu == "Przepisy":
             e_nazwa = st.text_input("Nazwa", value=p['nazwa'])
             e_opis = st.text_area("Instrukcja", value=p['opis'])
             c1, c2, c3, c4 = st.columns(4)
-            e_fi = c1.number_input("Fi", value=p.get('srednica', 20))
+            e_fi = c1.number_input("Fi bazowe", value=p.get('srednica', 20))
             e_marza = c2.number_input("Marża", value=p.get('marza', 10))
-            e_czas = c3.number_input("Czas", value=p.get('czas', 180))
-            e_stawka = c4.number_input("Stawka", value=p.get('stawka_h', 20))
+            e_czas = c3.number_input("Czas (min)", value=p.get('czas', 180))
+            e_stawka = c4.number_input("Stawka zarobku", value=p.get('stawka_h', 20))
             if st.form_submit_button("ZAPISZ ZMIANY", use_container_width=True):
                 p.update({"nazwa": e_nazwa, "opis": e_opis, "srednica": e_fi, "marza": e_marza, "czas": e_czas, "stawka_h": e_stawka})
                 save_data(data); st.session_state['edit_recipe_index'] = None; st.rerun()
             if st.form_submit_button("ANULUJ", use_container_width=True):
                 st.session_state['edit_recipe_index'] = None; st.rerun()
 
-    # 2. TRYB SZCZEGÓŁÓW (FULLSCREEN)
+    # 2. TRYB SZCZEGÓŁÓW (DYNAMIKA ŚREDNIC)
     elif st.session_state['fullscreen_recipe'] is not None:
         p = data["przepisy"][st.session_state['fullscreen_recipe']]
         
         if st.button("⬅️ WRÓĆ DO LISTY", use_container_width=True): 
             st.session_state['fullscreen_recipe'] = None; st.rerun()
         
-        st.markdown(f'<div class="order-card"><h1 style="margin:0;">{p["nazwa"]}</h1></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="order-card"><h1 style="margin:0;">{p["nazwa"]} ({p.get("typ", "Tort")})</h1></div>', unsafe_allow_html=True)
         
-        if p.get('zdjecia'): 
-            st.image(p['zdjecia'][0], use_container_width=True)
+        # SUWAK DYNAMICZNEGO PRZELICZANIA
+        st.write("### 📏 Dostosuj rozmiar tortu")
+        nowa_fi = st.slider("Wybierz docelową średnicę (cm)", 10, 40, p.get("srednica", 20))
+        
+        # Obliczamy nową cenę na podstawie wybranej średnicy
+        cena_dynamiczna = oblicz_cene_tortu(p, data['skladniki'], nowa_fi)
         
         col_info1, col_info2 = st.columns(2)
         with col_info1:
-            cena_b = oblicz_cene_tortu(p, data['skladniki'])
-            st.metric("Cena bazowa", f"{cena_b} zł")
+            st.metric(f"Cena dla Fi {nowa_fi}", f"{cena_dynamiczna} zł")
         
-        # OBLICZANIE SUMY KCAL
+        # AGREGACJA SKŁADNIKÓW I KCAL DLA WYBRANEJ ŚREDNICY
+        def pobierz_skladniki_przepisu(przepis, cel_fi):
+            wynik = {}
+            bazowa = przepis.get("srednica", 20)
+            k = (cel_fi / bazowa) ** 2
+            
+            # Jeśli to półprodukt
+            if "skladniki_przepisu" in przepis:
+                for s, il in przepis["skladniki_przepisu"].items():
+                    wynik[s] = wynik.get(s, 0) + (il * k)
+            
+            # Jeśli to tort z warstwami
+            elif "warstwy" in przepis:
+                for nazwa_w in przepis["warstwy"]:
+                    w_ref = next((prz for prz in data["przepisy"] if prz["nazwa"] == nazwa_w), None)
+                    if w_ref:
+                        sub_skladniki = pobierz_skladniki_przepisu(w_ref, cel_fi)
+                        for s, il in sub_skladniki.items():
+                            wynik[s] = wynik.get(s, 0) + il
+            return wynik
+
+        skladniki_suma = pobierz_skladniki_przepisu(p, nowa_fi)
+        
         suma_kcal = 0
-        for sk_nazwa, ilosc in p["skladniki_przepisu"].items():
-            if sk_nazwa in data["skladniki"]:
-                sk_info = data["skladniki"][sk_nazwa]
-                # kcal podajemy zazwyczaj na 100g/ml
-                kcal_w_przepisie = (sk_info['kcal'] * ilosc) / 100
-                suma_kcal += kcal_w_przepisie
+        for s, il in skladniki_suma.items():
+            if s in data["skladniki"]:
+                suma_kcal += (data["skladniki"][s]['kcal'] * il) / 100
         
         with col_info2:
             st.metric("Suma kalorii", f"{int(suma_kcal)} kcal")
 
         st.write("---")
         
-        # WYŚWIETLANIE SKŁADNIKÓW Z IKONAMI
-        st.subheader("🛒 Składniki")
-        for sk_nazwa, ilosc in p["skladniki_przepisu"].items():
-            ikona = data["skladniki"].get(sk_nazwa, {}).get("ikona", "📦")
+        # LISTA SKŁADNIKÓW (PRZELICZONA)
+        st.subheader(f"🛒 Lista zakupów na Fi {nowa_fi}")
+        for s, il in skladniki_suma.items():
+            ikona = data["skladniki"].get(s, {}).get("ikona", "📦")
             st.markdown(f"""
                 <div style="background: white; border: 1px solid #f56cb3; border-radius: 10px; padding: 5px 15px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 20px;">{ikona}</span>
-                    <span style="flex-grow: 1;"><b>{sk_nazwa}</b></span>
-                    <span style="color: #ff0aef;">{ilosc} g/szt/ml</span>
+                    <span style="flex-grow: 1;"><b>{s}</b></span>
+                    <span style="color: #ff0aef;">{il:.1f} g/szt/ml</span>
                 </div>
             """, unsafe_allow_html=True)
+
+        if p.get("typ") == "Tort" and "warstwy" in p:
+            st.write("---")
+            st.subheader("🥞 Struktura warstw")
+            for w in p["warstwy"]:
+                st.info(f"Warstwa: **{w}**")
 
         st.write("---")
         st.subheader("👩‍🍳 Instrukcja")
@@ -696,9 +742,10 @@ elif menu == "Przepisy":
 
     # 3. LISTA PRZEPISÓW
     else:
-        search = st.text_input("🔍 Szukaj tortu...", placeholder="Wpisz nazwę...")
-        st.write("")
+        st.subheader("📖 Twoja baza receptur")
+        search = st.text_input("🔍 Szukaj...", placeholder="Wpisz nazwę...")
         
+        # Filtrowanie i wyświetlanie
         for i, p in enumerate(data["przepisy"]):
             if search.lower() in p["nazwa"].lower():
                 cena_t = oblicz_cene_tortu(p, data["skladniki"])
@@ -707,7 +754,7 @@ elif menu == "Przepisy":
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <b style="font-size: 1.2rem;">{p["nazwa"]}</b><br>
-                                <small>Średnica bazowa: {p.get("srednica", 20)}cm</small>
+                                <small>Typ: {p.get("typ", "Tort")} | Fi bazowe: {p.get("srednica", 20)}cm</small>
                             </div>
                             <div style="color: #00ff00; font-weight: bold; font-size: 1.2rem;">{cena_t} zł</div>
                         </div>
@@ -738,6 +785,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
