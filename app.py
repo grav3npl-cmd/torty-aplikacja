@@ -730,7 +730,8 @@ elif menu == "Przepisy":
                 </div>
             """, unsafe_allow_html=True)
 
-            if p.get("typ") == "Tort" and "warstwy" in p:
+            # --- SEKCJA ROZWIJANYCH WARSTW (Poprawione wcięcia) ---
+        if p.get("typ") == "Tort" and "warstwy" in p:
             st.write("---")
             st.subheader("🥞 Struktura warstw (kliknij, aby zobaczyć przepis)")
             
@@ -745,15 +746,21 @@ elif menu == "Przepisy":
                         with c_w1:
                             st.write("**Składniki bazowe:**")
                             # Wyświetlamy składniki z przepisu warstwy
-                            for s_w, il_w in w_data.get("skladniki_przepisu", {}).items():
-                                ikona_w = data["skladniki"].get(s_w, {}).get("ikona", "📦")
-                                st.write(f"{ikona_w} {s_w}: {il_w} g/szt/ml")
+                            skladniki_w = w_data.get("skladniki_przepisu", {})
+                            if skladniki_w:
+                                for s_w, il_w in skladniki_w.items():
+                                    ikona_w = data["skladniki"].get(s_w, {}).get("ikona", "📦")
+                                    st.write(f"{ikona_w} {s_w}: {il_w} g/szt/ml")
+                            else:
+                                st.write("Brak składników w bazie.")
                         
                         with c_w2:
                             st.write("**Instrukcja wykonania:**")
                             st.info(w_data.get("opis", "Brak opisu."))
                 else:
                     st.error(f"Nie znaleziono danych dla warstwy: {w_nazwa}")
+
+        # --- KONIEC SEKCJI WARSTW ---
 
         st.write("---")
         st.subheader("👩‍🍳 Instrukcja złożenia całości")
@@ -804,6 +811,7 @@ elif menu == "Galeria":
                 st.image(item["src"], use_container_width=True)
                 if st.button("👁️ Zobacz przepis", key=f"g_v_{i}", use_container_width=True):
                     st.session_state['menu'] = "Przepisy"; st.session_state['fullscreen_recipe'] = item["idx"]; st.rerun()
+
 
 
 
